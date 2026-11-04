@@ -9,9 +9,15 @@ export function useElementSize<T extends Element>() {
 
   useEffect(() => {
     if (!element) return
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
+    const update = (width: number, height: number) =>
       setSize((s) => (s.width === width && s.height === height ? s : { width, height }))
+
+    // Measure immediately: ResizeObserver only reports during a rendered frame,
+    // which never comes in background tabs or hidden panes.
+    update(element.clientWidth, element.clientHeight)
+
+    const observer = new ResizeObserver(([entry]) => {
+      update(entry.contentRect.width, entry.contentRect.height)
     })
     observer.observe(element)
     return () => observer.disconnect()

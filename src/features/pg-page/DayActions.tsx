@@ -13,7 +13,7 @@ export function DayActions() {
   return (
     <div className="grid grid-cols-3 items-start px-12">
       {/* PLACEHOLDER(06): behavior is undecided (OQ-3). */}
-      <TextLink placeholder className="col-start-2 justify-self-center">
+      <TextLink placeholder className="col-start-2 justify-self-center whitespace-nowrap">
         Select Task(s)
       </TextLink>
       <div className="flex flex-col items-end gap-6">

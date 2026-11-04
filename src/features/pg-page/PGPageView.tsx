@@ -19,7 +19,8 @@ export function PGPageView() {
         <DayActions />
       </div>
 
-      <div className="col-span-2">
+      {/* Pulled up so "Goals for the day" sits level with Check All, as in the mockup. */}
+      <div className="col-span-2 -mt-20">
         <GoalSections />
       </div>
     </main>

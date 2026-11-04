@@ -16,7 +16,7 @@ export default function PrimitivesPreview() {
     setGoals((gs) => gs.map((g) => (g.id === id ? { ...g, completed: !g.completed } : g)))
 
   return (
-    <main className="mx-auto flex max-w-[1370px] flex-col gap-12 px-16 py-12">
+    <main className="mx-auto flex max-w-page flex-col gap-12 px-16 py-12">
       <h1 className="font-display text-title">
         <span className="block font-light">Primitives</span>
         <span className="block font-bold">Preview</span>
