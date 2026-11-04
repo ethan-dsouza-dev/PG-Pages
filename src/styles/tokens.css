@@ -7,13 +7,15 @@
  *   2. Semantic (@theme inline, --color-*, --font-*, --text-*): named for what
  *      they are FOR. These generate the Tailwind utilities components use
  *      (bg-surface-page, text-text-on-accent, font-display, text-title, ...).
- *   3. Component: knobs owned by one component. The timeline's geometry lives in
- *      src/features/timeline/layout.ts because SVG coordinates need numbers.
+ *   3. Component: knobs owned by one component (bottom of this file). The
+ *      timeline's geometry and the gallery's salon layout live next to their
+ *      components in layout.ts, because they need plain numbers.
  *
  * Tailwind's default palette, fonts, and type scale are reset below, so
  * `bg-red-500` and friends do not compile. Use semantic tokens only.
  *
- * Values were eyeballed from specs/mockups/pg-page-desktop-v1.png.
+ * Values were eyeballed from specs/mockups/pg-page-desktop-v1.png and
+ * specs/mockups/ad-gallery-desktop-v1.png.
  * TODO(OQ-8): replace with exact values from Figma.
  */
 
@@ -31,10 +33,15 @@
   --palette-ink-900: #111111;
   --palette-ink-900-a40: rgb(17 17 17 / 0.4);
   --palette-white: #ffffff;
+  /* Ad gallery. TODO(OQ-8): exact values. */
+  --palette-teal-500: #00c4bc;
+  --palette-olive-700: #7a6a3a;
 
   /* TODO(OQ-5): swap in the display and body font families once chosen. */
   --palette-font-display: system-ui, 'Segoe UI', Roboto, sans-serif;
   --palette-font-body: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* TODO(OQ-12): is the ad caption serif deliberate, or chosen per advertiser? */
+  --palette-font-serif: 'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, 'Times New Roman', serif;
 }
 
 /* ---------- Tier 2: semantic ---------- */
@@ -48,6 +55,14 @@
   /* Surfaces */
   --color-surface-page: var(--palette-yellow-500);
   --color-surface-panel: var(--palette-grey-300);
+  /* Neutral page background; shows as the white gaps between stacked sections. */
+  --color-surface-base: var(--palette-white);
+
+  /* Ad gallery. TODO(OQ-8): eyeballed. */
+  --color-surface-gallery-trim: var(--palette-teal-500);
+  --color-surface-gallery-wall: var(--palette-grey-300);
+  --color-frame: var(--palette-olive-700);
+  --color-text-caption: var(--palette-ink-900);
 
   /* Timeline */
   --color-track-today: var(--palette-rose-300);
@@ -75,6 +90,10 @@
   /* Typography */
   --font-display: var(--palette-font-display);
   --font-body: var(--palette-font-body);
+  --font-caption: var(--palette-font-serif);
+
+  /* Effects */
+  --shadow-lift: 0 0.75rem 1.5rem -0.5rem var(--palette-ink-900-a40);
 }
 
 @theme {
@@ -89,6 +108,8 @@
   --text-label--line-height: 1.3;
   --text-meta: 1.125rem;
   --text-meta--line-height: 1.3;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.2;
 
   /* Radii */
   --radius-chip: 0.375rem;
@@ -97,4 +118,18 @@
 
   /* Layout */
   --container-page: 85.625rem;
+  /* White gap between stacked sections (bg-surface-base showing through). */
+  --spacing-section-gap: 3rem;
+  /* Height of the gallery's teal ceiling and floor bands. */
+  --spacing-gallery-trim: 7.5rem;
+}
+
+/* ---------- Tier 3: component ---------- */
+:root {
+  /*
+   * PictureFrame border. In the mockup every frame has the same thickness no
+   * matter its size, so it scales with the wall (the nearest size container),
+   * not with the frame itself. Without a container it falls back to the viewport.
+   */
+  --frame-border: 1.46cqi;
 }
