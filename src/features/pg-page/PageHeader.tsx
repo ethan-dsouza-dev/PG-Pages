@@ -3,12 +3,12 @@ import { usePageMeta } from '../../store/pgPageStore'
 import { TextLink } from '../../ui'
 
 /** Two-line page title plus the version line. */
-export function PageHeader() {
+export function PageHeader({ titleId }: { titleId?: string }) {
   const { ownerName, version } = usePageMeta()
 
   return (
     <header className="flex flex-col gap-6">
-      <h1 className="font-display text-title whitespace-nowrap">
+      <h1 id={titleId} className="font-display text-title whitespace-nowrap">
         <span className="block font-light">{formatTitleLead(ownerName)}</span>{' '}
         <span className="block font-bold">PG Page</span>
       </h1>

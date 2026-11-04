@@ -13,9 +13,10 @@ describe('PGPageView', () => {
     usePGPageStore.setState({ page: createMockPage() })
   })
 
-  it('has one main landmark and one h1 with the full page title', () => {
+  it('is a section labelled by its one h1, the full page title', () => {
     render(<PGPageView />)
-    expect(screen.getAllByRole('main')).toHaveLength(1)
+    expect(screen.queryByRole('main')).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: "Jake's First PG Page" })).toHaveClass('bg-surface-page')
     const headings = screen.getAllByRole('heading', { level: 1 })
     expect(headings).toHaveLength(1)
     expect(headings[0]).toHaveAccessibleName("Jake's First PG Page")
