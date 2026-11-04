@@ -89,6 +89,9 @@
   --radius-chip: 0.375rem;
   --radius-add: 0.5rem;
   --radius-panel: 0.875rem;
+
+  /* Layout */
+  --container-page: 85.625rem;
 }
 
 /* ---------- Tier 3: component ---------- */

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { PGPageView } from './features/pg-page/PGPageView'
 
 const PrimitivesPreview = import.meta.env.DEV ? lazy(() => import('./dev/PrimitivesPreview')) : null
 
@@ -11,8 +12,7 @@ function App() {
     )
   }
 
-  // The PG Page shell lands here in brief 04.
-  return <main />
+  return <PGPageView />
 }
 
 export default App
