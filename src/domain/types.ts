@@ -64,3 +64,54 @@ export type Ad = {
   /** Click-through URL. */
   href: string
 }
+
+/* ---------- Category boards (brief 09) ---------- */
+
+export type CategoryId = string
+
+/** Which token set (`[data-board-theme]` block in tokens.css) a board uses. Grows with new themes. */
+export type BoardTheme = 'productivity' | 'self-care' | 'leisure'
+
+export type Category = {
+  id: CategoryId
+  /** "Productivity", "Social" */
+  name: string
+  theme: BoardTheme
+}
+
+export type BoardItemStatus = 'todo' | 'done' | 'inactive'
+
+// Separate from Goal and Task on purpose. TODO(OQ-7): reconcile later.
+export type BoardItem = {
+  id: string
+  title: string
+  status: BoardItemStatus
+  /** Every category the item belongs to. Decides which lane it lands in. */
+  categoryIds: CategoryId[]
+  /** Optional phase strip. `span` is required when phases are present. */
+  span?: TimeSpan
+  phases?: Phase[]
+}
+
+export type BoardGroupLayout = 'compact' | 'expanded'
+
+export type BoardGroup = {
+  id: string
+  title: string
+  /** Small line above the title. TODO(OQ-15): UI copy or designer annotation? */
+  note?: string
+  layout: BoardGroupLayout
+  /** Display order; lane placement is derived by `placeItems`. */
+  itemIds: string[]
+  /** Nested groups. The UI is tuned for one level; the type allows more. */
+  children?: BoardGroup[]
+}
+
+export type Board = {
+  id: string
+  /** Title and theme come from this category. */
+  categoryId: CategoryId
+  /** One overlap lane each, in this order. */
+  overlapCategoryIds: CategoryId[]
+  groups: BoardGroup[]
+}

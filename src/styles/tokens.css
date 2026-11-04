@@ -36,6 +36,15 @@
   /* Ad gallery. TODO(OQ-8): exact values. */
   --palette-teal-500: #00c4bc;
   --palette-olive-700: #7a6a3a;
+  /* Category boards and footer (brief 09). TODO(OQ-8): exact values. */
+  --palette-board-productivity-hue: #f44a4a;
+  --palette-board-productivity-panel: #fcd0d0;
+  --palette-board-self-care-hue: #4fd6cf;
+  --palette-board-self-care-panel: #cdf1ef;
+  --palette-board-leisure-hue: #ebe04f;
+  --palette-board-leisure-panel: #f7f2bd;
+  --palette-red-800: #b00000;
+  --palette-brown-500: #8f6440;
 
   /* TODO(OQ-5): swap in the display and body font families once chosen. */
   --palette-font-display: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -63,6 +72,25 @@
   --color-surface-gallery-wall: var(--palette-grey-300);
   --color-frame: var(--palette-olive-700);
   --color-text-caption: var(--palette-ink-900);
+
+  /*
+   * Category boards. The five board colors are set per theme by the
+   * [data-board-theme] blocks at the bottom of this file; these entries only
+   * generate the utilities (bg-board-panel, border-group-ring, ...).
+   * Rings and the lane are the theme hue at alpha, so overlaps darken on their own.
+   */
+  --color-board-ring: var(--board-ring);
+  --color-board-panel: var(--board-panel);
+  --color-group-ring: var(--group-ring);
+  --color-group-panel: var(--group-panel);
+  --color-board-lane: var(--board-lane);
+  --color-board-item-inactive: var(--palette-brown-500);
+  /* Gap between adjacent phase segments on a board chip's strip. */
+  --color-phase-gap: var(--palette-white);
+
+  /* Page footer */
+  --color-surface-footer: var(--palette-red-800);
+  --color-text-on-footer: var(--palette-white);
 
   /* Timeline */
   --color-track-today: var(--palette-rose-300);
@@ -108,6 +136,9 @@
   --text-label--line-height: 1.3;
   --text-meta: 1.125rem;
   --text-meta--line-height: 1.3;
+  /* Board group titles: a step under the board title, a step over chip labels. */
+  --text-group: 1.4375rem;
+  --text-group--line-height: 1.2;
   --text-caption: 0.8125rem;
   --text-caption--line-height: 1.2;
 
@@ -122,6 +153,10 @@
   --spacing-section-gap: 3rem;
   /* Height of the gallery's teal ceiling and floor bands. */
   --spacing-gallery-trim: 7.5rem;
+  /* Page footer height at 1440px (about 370px in the mockup). */
+  --spacing-footer: 23rem;
+  /* Narrow measure that makes the footer's page name wrap onto two lines. */
+  --container-footer-name: 14rem;
 }
 
 /* ---------- Tier 3: component ---------- */
@@ -132,4 +167,57 @@
    * not with the frame itself. Without a container it falls back to the viewport.
    */
   --frame-border: 1.46cqi;
+}
+
+/*
+ * Category boards. Geometry scales with the board (a size container), so every
+ * length is in cqi: 1cqi = 1% of the board's width (13.7px at 1440).
+ * Tuned against specs/mockups/board-self-care-v1.png. TODO(OQ-8): exact values.
+ * The column template that keeps lanes aligned lives in
+ * src/features/category-board/layout.ts, next to the component.
+ */
+:root {
+  --board-ring-width: 2.2cqi;
+  --board-radius: 4.4cqi;
+  /* Space between the inner panel's edge and the groups. */
+  --board-pad: 1.6cqi;
+  /* Vertical space between groups (and the header and add bar). */
+  --board-gap: 1.8cqi;
+  --group-ring-width: 2.2cqi;
+  --group-radius: 3.4cqi;
+  /* A nested group's extra inset inside its parent. */
+  --group-nest-inset: 1.2cqi;
+  /* Vertical padding inside a group's ring. */
+  --group-pad-block: 1cqi;
+  --lane-radius: 3.4cqi;
+  /* An empty group keeps this much room for items. */
+  --group-empty-min-height: 12cqi;
+}
+
+/*
+ * Board themes. A theme is two primitives mapped onto the five semantic board
+ * colors. To add one: copy a block, change the two primitives, and add the name
+ * to the BoardTheme union in src/domain/types.ts. Components never change.
+ */
+[data-board-theme] {
+  --board-ring: color-mix(in srgb, var(--board-hue) 72%, transparent);
+  --board-panel: var(--board-panel-tint);
+  --group-ring: color-mix(in srgb, var(--board-hue) 72%, transparent);
+  --group-panel: color-mix(in srgb, var(--board-hue) 14%, transparent);
+  --board-lane: color-mix(in srgb, var(--board-hue) 26%, transparent);
+}
+
+[data-board-theme='productivity'] {
+  --board-hue: var(--palette-board-productivity-hue);
+  --board-panel-tint: var(--palette-board-productivity-panel);
+}
+
+[data-board-theme='self-care'] {
+  --board-hue: var(--palette-board-self-care-hue);
+  --board-panel-tint: var(--palette-board-self-care-panel);
+}
+
+[data-board-theme='leisure'] {
+  --board-hue: var(--palette-board-leisure-hue);
+  --board-panel-tint: var(--palette-board-leisure-panel);
 }
