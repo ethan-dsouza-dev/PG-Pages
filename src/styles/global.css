@@ -10,7 +10,7 @@
   }
 
   body {
-    @apply min-h-dvh bg-surface-page font-body text-text;
+    @apply min-h-dvh bg-surface-base font-body text-text;
   }
 }
 

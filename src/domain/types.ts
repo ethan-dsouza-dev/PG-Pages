@@ -51,3 +51,16 @@ export type PGPage = {
 
 /** Anything with an ISO start and end, e.g. a Task or a Phase. */
 export type TimeSpan = Pick<Task, 'start' | 'end'>
+
+/** A sponsored placement shown in the ad gallery. */
+export type Ad = {
+  id: string
+  /** Used in the accessible name ("Advertisement: {advertiser}"). */
+  advertiser: string
+  /** Intrinsic pixel size, so the frame reserves the right shape before load. */
+  image: { src: string; alt: string; width: number; height: number }
+  /** Advertiser tagline shown above the frame, e.g. "Join us at the museum". */
+  caption?: string
+  /** Click-through URL. */
+  href: string
+}

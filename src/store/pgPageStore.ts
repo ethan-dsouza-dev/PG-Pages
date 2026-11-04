@@ -1,11 +1,15 @@
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import { MOCK_ADS } from '../data/mock/ads'
 import { createMockPage } from '../data/mock/pgPage'
+import { GALLERY_AD_COUNT, pickAds } from '../domain/ads'
 import * as dayActions from '../domain/dayActions'
-import type { Goal, GoalScope, PGPage, Task } from '../domain/types'
+import type { Ad, Goal, GoalScope, PGPage, Task } from '../domain/types'
 
 type PGPageState = {
   page: PGPage
+  /** Picked once when the store is created: stable for the whole page load. */
+  galleryAds: Ad[]
   toggleGoal: (goalId: string) => void
   toggleTask: (taskId: string) => void
   checkAll: (day: Date) => void
@@ -15,6 +19,7 @@ type PGPageState = {
 // Static UI phase: the page always comes from mock data (README rule 1).
 export const usePGPageStore = create<PGPageState>()((set) => ({
   page: createMockPage(),
+  galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
   toggleGoal: (goalId) => set((s) => ({ page: dayActions.toggleGoal(s.page, goalId) })),
   toggleTask: (taskId) => set((s) => ({ page: dayActions.toggleTask(s.page, taskId) })),
   checkAll: (day) => set((s) => ({ page: dayActions.checkAll(s.page, day) })),
@@ -43,6 +48,11 @@ export function usePageMeta() {
       timeZone: s.page.timeZone,
     })),
   )
+}
+
+/** The ads hanging on the gallery wall for this page load. */
+export function useGalleryAds(): Ad[] {
+  return usePGPageStore((s) => s.galleryAds)
 }
 
 export function usePGPageActions() {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AddChip, Chip, Panel, SectionHeading, TextLink } from '../ui'
+import { AddChip, Chip, Panel, PictureFrame, SectionHeading, TextLink } from '../ui'
 
 const initialGoals = [
   { id: 'g1', label: 'Clean your room', completed: false },
@@ -55,6 +55,25 @@ export default function PrimitivesPreview() {
           <span className="text-label">Add Timed Task</span>
           <AddChip label="Add timed task" size="compact" placeholder />
         </Panel>
+      </section>
+
+      <section className="flex flex-col gap-6">
+        <SectionHeading>Picture frames</SectionHeading>
+        <p className="text-meta">
+          Landscape, portrait, and square, with and without a caption. Full shape combinations on the wall:{' '}
+          <TextLink href="?gallery">gallery preview</TextLink>
+        </p>
+        <div className="flex items-start gap-12 bg-surface-gallery-wall p-12 pt-16">
+          <PictureFrame aspectRatio={5 / 4} className="w-80">
+            <img src="/ads/placeholder_4.svg" alt="Abstract circles over a wavy horizon" width={1000} height={800} />
+          </PictureFrame>
+          <PictureFrame aspectRatio={4 / 5} caption="Join us at the museum" className="w-56">
+            <img src="/ads/placeholder_6.svg" alt="A sun setting behind purple ridges" width={800} height={1000} />
+          </PictureFrame>
+          <PictureFrame aspectRatio={1} caption="Square, no image yet" className="w-60">
+            <div />
+          </PictureFrame>
+        </div>
       </section>
     </main>
   )
