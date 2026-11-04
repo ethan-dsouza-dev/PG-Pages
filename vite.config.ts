@@ -12,6 +12,8 @@ export default defineConfig({
     tailwindcss(),
   ],
   test: {
+    // Only this checkout's tests: .claude/worktrees holds other sessions' checkouts.
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
   },
