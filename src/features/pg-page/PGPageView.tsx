@@ -1,21 +1,8 @@
-import { cx } from '../../ui'
 import { TimelinePanel } from '../timeline/TimelinePanel'
+import { DayActions } from './DayActions'
+import { GoalSections } from './GoalSections'
 import { PageHeader } from './PageHeader'
 import { PageLinks } from './PageLinks'
-
-/** Labeled stand-in for a region a later brief fills in. */
-function Slot({ label, className }: { label: string; className?: string }) {
-  return (
-    <div
-      className={cx(
-        'flex items-center justify-center rounded-panel border-2 border-dashed border-border-strong text-label',
-        className,
-      )}
-    >
-      {label}
-    </div>
-  )
-}
 
 /** Page layout: header column beside the timeline, then actions and goal sections. */
 export function PGPageView() {
@@ -28,11 +15,13 @@ export function PGPageView() {
 
       <TimelinePanel />
 
-      {/* Replaced by <DayActions /> in brief 06. */}
-      <Slot label="Day actions (brief 06)" className="col-start-2 h-28" />
+      <div className="col-start-2">
+        <DayActions />
+      </div>
 
-      {/* Replaced by <GoalSections /> in brief 06. */}
-      <Slot label="Goal sections (brief 06)" className="col-span-2 h-150" />
+      <div className="col-span-2">
+        <GoalSections />
+      </div>
     </main>
   )
 }
