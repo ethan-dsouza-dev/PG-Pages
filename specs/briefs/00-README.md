@@ -18,6 +18,7 @@ There is one implementing agent, and it works through the briefs **in order**. E
 | 05 | [Timeline visualization](05-timeline.md) | 02, 03, 04 |
 | 06 | [Goal sections and day actions](06-goal-sections-and-actions.md) | 02, 03, 04 |
 | 07 | [Integration and QA pass](07-integration-qa.md) | all |
+| 08 | [Ad gallery section](08-ad-gallery-section.md) (first below-the-fold section; sets up the page stack) | 07 |
 
 ## Ground rules (apply to every brief)
 
@@ -60,4 +61,9 @@ There is one implementing agent, and it works through the briefs **in order**. E
 | OQ-5 | **Font families.** Two are needed: a *display* font (the title, light and bold weights) and a *body* font (everything else). | 01 | Waiting on the design owner. Use the fallbacks in brief 01 until then. |
 | OQ-6 | Is the page yellow a fixed brand color or a per-page user theme? Is dark mode needed? | 01 | Assume fixed and light-only for now. Tokens must make a later switch a one-file change. |
 | OQ-7 | How does the UI `Task` type relate to the PROJECT_BRIEF `Event` model (`source`, `recurrence`, sync fields)? | 02 | Architectural, so it needs sign-off before persistence work. For now, define UI types separately. |
+| OQ-9 | Is the blue outline around the gallery wall a design element, or the Figma selection highlight? | 08 | **Resolved:** selection highlight. Not built. |
+| OQ-10 | Where do ads come from? How many show at once, and do they rotate? | 08 | **Partly resolved:** 3 per load, picked at random from a mock pool. The real source is still open. |
+| OQ-11 | Does the ad section need a visible "Sponsored" label? | 08 | **Resolved:** visually-hidden only. |
+| OQ-12 | Is the caption serif deliberate, or chosen by each advertiser? | 08 | Open. Fallback serif token. |
+| OQ-13 | Are the teal bands part of the gallery, or a divider shared by every section? | 08 | **Resolved:** gallery only. |
 | OQ-8 | Exact token values. Current values were eyeballed from a PNG export. Is there a Figma file to inspect? | 01 | Refine when Figma access is available. |
