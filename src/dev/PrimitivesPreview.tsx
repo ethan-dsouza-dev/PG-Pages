@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AddChip, Chip, Panel, PictureFrame, SectionHeading, TextLink } from '../ui'
+import { AddChip, Chip, Panel, PhaseBar, PictureFrame, SectionHeading, SeeAllButton, TextLink } from '../ui'
 
 const initialGoals = [
   { id: 'g1', label: 'Clean your room', completed: false },
@@ -55,6 +55,25 @@ export default function PrimitivesPreview() {
           <span className="text-label">Add Timed Task</span>
           <AddChip label="Add timed task" size="compact" placeholder />
         </Panel>
+      </section>
+
+      <section className="flex flex-col gap-6">
+        <SectionHeading>Board pieces</SectionHeading>
+        <p className="text-meta">
+          Phase bar, See all, and the add-group bar. Full boards: <TextLink href="?boards">boards preview</TextLink>
+        </p>
+        <div className="flex items-start gap-12">
+          <PhaseBar
+            className="h-4.5 w-80"
+            segments={[
+              { id: 'a', startFr: 0, endFr: 0.37 },
+              { id: 'b', startFr: 0.37, endFr: 0.6 },
+              { id: 'c', startFr: 0.6, endFr: 1 },
+            ]}
+          />
+          <SeeAllButton count={22} label="See all 22 items" />
+        </div>
+        <AddChip label="Add group" size="bar" placeholder />
       </section>
 
       <section className="flex flex-col gap-6">

@@ -2,7 +2,8 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMockPage } from '../data/mock/pgPage'
 import { GALLERY_AD_COUNT } from '../domain/ads'
-import { useGalleryAds, useGoals, usePGPageActions, usePGPageStore } from './pgPageStore'
+import { MOCK_BOARD_ITEMS } from '../data/mock/boards'
+import { useBoardActions, useBoardItems, useGalleryAds, useGoals, usePGPageActions, usePGPageStore } from './pgPageStore'
 
 describe('pgPageStore', () => {
   beforeEach(() => {
@@ -47,5 +48,29 @@ describe('pgPageStore', () => {
     act(() => actions.result.current.resetDay(new Date()))
 
     expect(ads.result.current).toBe(before)
+  })
+
+  describe('boards slice', () => {
+    beforeEach(() => {
+      usePGPageStore.setState({ boardItems: MOCK_BOARD_ITEMS })
+    })
+
+    it('toggles a board item between todo and done', () => {
+      const items = renderHook(() => useBoardItems())
+      const actions = renderHook(() => useBoardActions())
+      act(() => actions.result.current.toggleBoardItem('sc-clean-clean'))
+      expect(items.result.current['sc-clean-clean'].status).toBe('done')
+      act(() => actions.result.current.toggleBoardItem('sc-clean-clean'))
+      expect(items.result.current['sc-clean-clean'].status).toBe('todo')
+    })
+
+    it('ignores inactive items', () => {
+      const items = renderHook(() => useBoardItems())
+      const actions = renderHook(() => useBoardActions())
+      const before = items.result.current
+      expect(before['sc-unsorted-meet-design'].status).toBe('inactive')
+      act(() => actions.result.current.toggleBoardItem('sc-unsorted-meet-design'))
+      expect(items.result.current).toBe(before)
+    })
   })
 })

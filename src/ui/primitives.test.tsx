@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { AddChip } from './AddChip'
 import { Chip } from './Chip'
 import { Panel } from './Panel'
+import { PhaseBar } from './PhaseBar'
+import { SeeAllButton } from './SeeAllButton'
 import { SectionHeading } from './SectionHeading'
 import { TextLink } from './TextLink'
 
@@ -104,5 +106,38 @@ describe('Panel and SectionHeading', () => {
     expect(screen.getByTestId('panel')).toHaveClass('bg-surface-panel')
     expect(screen.getByRole('heading', { level: 2, name: 'Goals for the day' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: 'Sub heading' })).toBeInTheDocument()
+  })
+})
+
+describe('PhaseBar', () => {
+  it('draws one decorative segment per entry, sized as a fraction of the bar', () => {
+    const { container } = render(
+      <PhaseBar
+        segments={[
+          { id: 'a', startFr: 0, endFr: 0.25 },
+          { id: 'b', startFr: 0.25, endFr: 1 },
+        ]}
+      />,
+    )
+    const bar = container.firstElementChild as HTMLElement
+    expect(bar).toHaveAttribute('aria-hidden', 'true')
+    const segments = bar.querySelectorAll<HTMLElement>('[data-phase-segment]')
+    expect([...segments].map((s) => [s.style.left, s.style.width])).toEqual([
+      ['0%', '25%'],
+      ['25%', '75%'],
+    ])
+  })
+})
+
+describe('SeeAllButton', () => {
+  it('is a placeholder named by its label', async () => {
+    const user = userEvent.setup()
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+    render(<SeeAllButton count={22} label="See all 22 Self-Care items in Cleaning Day" />)
+    const button = screen.getByRole('button', { name: 'See all 22 Self-Care items in Cleaning Day, coming soon' })
+    expect(button).toHaveAttribute('aria-disabled', 'true')
+    await user.click(button)
+    expect(info).toHaveBeenCalledOnce()
+    info.mockRestore()
   })
 })
