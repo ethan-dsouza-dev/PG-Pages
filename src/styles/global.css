@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+@layer base {
+  html {
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply min-h-dvh bg-surface-page font-body text-text;
+  }
+}
+
+/*
+ * Shared interaction states for every clickable primitive, defined once so
+ * hover/focus/motion stay consistent across the design system.
+ */
+@utility interactive {
+  cursor: pointer;
+  transition-property: filter, background-color, color;
+  transition-duration: 150ms;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--color-focus-ring);
+    outline-offset: 3px;
+  }
+
+  /* Placeholders look identical to the mockup; only the cursor hints at them. */
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  &[aria-disabled='true']:hover {
+    filter: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
