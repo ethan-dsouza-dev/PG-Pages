@@ -1,4 +1,5 @@
 import { cx } from '../../ui'
+import { TimelinePanel } from '../timeline/TimelinePanel'
 import { PageHeader } from './PageHeader'
 import { PageLinks } from './PageLinks'
 
@@ -25,8 +26,7 @@ export function PGPageView() {
         <PageLinks />
       </div>
 
-      {/* Replaced by <TimelinePanel /> in brief 05. */}
-      <Slot label="Timeline (brief 05)" className="h-174" />
+      <TimelinePanel />
 
       {/* Replaced by <DayActions /> in brief 06. */}
       <Slot label="Day actions (brief 06)" className="col-start-2 h-28" />

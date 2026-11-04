@@ -7,7 +7,8 @@
  *   2. Semantic (@theme inline, --color-*, --font-*, --text-*): named for what
  *      they are FOR. These generate the Tailwind utilities components use
  *      (bg-surface-page, text-text-on-accent, font-display, text-title, ...).
- *   3. Component (:root, --timeline-*): knobs owned by one component.
+ *   3. Component: knobs owned by one component. The timeline's geometry lives in
+ *      src/features/timeline/layout.ts because SVG coordinates need numbers.
  *
  * Tailwind's default palette, fonts, and type scale are reset below, so
  * `bg-red-500` and friends do not compile. Use semantic tokens only.
@@ -28,6 +29,7 @@
   --palette-tan-400: #b08058;
   --palette-red-600: #e00000;
   --palette-ink-900: #111111;
+  --palette-ink-900-a40: rgb(17 17 17 / 0.4);
   --palette-white: #ffffff;
 
   /* TODO(OQ-5): swap in the display and body font families once chosen. */
@@ -66,6 +68,9 @@
   --color-text-on-accent: var(--palette-white);
   --color-border-strong: var(--palette-ink-900);
   --color-focus-ring: var(--palette-ink-900);
+  /* Focus ring drawn on top of dark or saturated fills (timeline bars, phases) */
+  --color-focus-ring-inverse: var(--palette-white);
+  --color-overlay: var(--palette-ink-900-a40);
 
   /* Typography */
   --font-display: var(--palette-font-display);
@@ -92,12 +97,4 @@
 
   /* Layout */
   --container-page: 85.625rem;
-}
-
-/* ---------- Tier 3: component ---------- */
-:root {
-  --timeline-row-height: 46px;
-  --timeline-row-gap: 32px;
-  --timeline-phase-height: 18px;
-  --timeline-now-width: 3px;
 }
