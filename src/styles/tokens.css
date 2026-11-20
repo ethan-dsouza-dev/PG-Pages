@@ -114,6 +114,8 @@
   /* Focus ring drawn on top of dark or saturated fills (timeline bars, phases) */
   --color-focus-ring-inverse: var(--palette-white);
   --color-overlay: var(--palette-ink-900-a40);
+  /* Accent bar beside error messages (the text itself stays --color-text for contrast). */
+  --color-error: var(--palette-red-600);
 
   /* Typography */
   --font-display: var(--palette-font-display);
