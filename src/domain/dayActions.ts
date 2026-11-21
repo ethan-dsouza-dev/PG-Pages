@@ -30,14 +30,15 @@ export function resetDay(page: PGPage, day: Date): PGPage {
   return setDayCompletion(page, day, false)
 }
 
-// Month goals and themes are deliberately untouched by day actions.
+// Month goals and themes are deliberately untouched by day actions, and so are
+// tasks taken off the schedule (they are not on the timeline).
 function setDayCompletion(page: PGPage, day: Date, completed: boolean): PGPage {
   const bounds = getDayBounds(day, page.timeZone)
   const goals = mapIfChanged(page.goals, (g: Goal) =>
     g.scope === 'day' && g.completed !== completed ? { ...g, completed } : g,
   )
   const tasks = mapIfChanged(page.tasks, (t: Task) =>
-    overlaps(t, bounds) && t.completed !== completed ? { ...t, completed } : t,
+    !t.unscheduled && overlaps(t, bounds) && t.completed !== completed ? { ...t, completed } : t,
   )
   if (goals === page.goals && tasks === page.tasks) return page
   return { ...page, goals, tasks }
