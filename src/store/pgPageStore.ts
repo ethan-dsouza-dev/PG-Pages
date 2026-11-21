@@ -6,6 +6,7 @@ import { createMockPage } from '../data/mock/pgPage'
 import { GALLERY_AD_COUNT, pickAds } from '../domain/ads'
 import * as boards from '../domain/boards'
 import * as dayActions from '../domain/dayActions'
+import * as taskActions from '../domain/taskActions'
 import type { Ad, Board, BoardItem, Category, CategoryId, Goal, GoalScope, PGPage, Task } from '../domain/types'
 
 type PGPageState = {
@@ -20,6 +21,10 @@ type PGPageState = {
   toggleTask: (taskId: string) => void
   checkAll: (day: Date) => void
   resetDay: (day: Date) => void
+  /** LP-6.9: takes a task off the schedule as of `now`; it stays in the page. */
+  unscheduleTask: (taskId: string, now?: Date) => void
+  /** LP-6.10: permanently removes a task from the page. */
+  deleteTask: (taskId: string) => void
   /** Flips a board item todo ↔ done. Inactive items are ignored (OQ-16). */
   toggleBoardItem: (itemId: string) => void
 }
@@ -35,6 +40,9 @@ export const usePGPageStore = create<PGPageState>()((set) => ({
   toggleTask: (taskId) => set((s) => ({ page: dayActions.toggleTask(s.page, taskId) })),
   checkAll: (day) => set((s) => ({ page: dayActions.checkAll(s.page, day) })),
   resetDay: (day) => set((s) => ({ page: dayActions.resetDay(s.page, day) })),
+  unscheduleTask: (taskId, now = new Date()) =>
+    set((s) => ({ page: taskActions.unscheduleTask(s.page, taskId, now) })),
+  deleteTask: (taskId) => set((s) => ({ page: taskActions.deleteTask(s.page, taskId) })),
   toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
 }))
 
@@ -49,6 +57,11 @@ export function useGoals(scope: GoalScope): Goal[] {
 
 export function useTasks(): Task[] {
   return usePGPageStore((s) => s.page.tasks)
+}
+
+/** Tasks shown on the timeline: every task not taken off the schedule. */
+export function useScheduledTasks(): Task[] {
+  return usePGPageStore(useShallow((s) => taskActions.scheduledTasks(s.page.tasks)))
 }
 
 export function usePageMeta() {
@@ -74,6 +87,8 @@ export function usePGPageActions() {
       toggleTask: s.toggleTask,
       checkAll: s.checkAll,
       resetDay: s.resetDay,
+      unscheduleTask: s.unscheduleTask,
+      deleteTask: s.deleteTask,
     })),
   )
 }

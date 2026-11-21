@@ -36,6 +36,11 @@ export type Task = {
   seriesId?: string
   /** Rendered as the dark strip under the bar; absent means no strip. */
   phases?: Phase[]
+  /**
+   * Taken off the schedule (LP-6.9 "Remove"): hidden from the timeline but
+   * still part of the page. Absent means scheduled.
+   */
+  unscheduled?: boolean
 }
 
 export type PGPage = {
