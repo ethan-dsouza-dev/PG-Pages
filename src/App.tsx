@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { AuthGate } from './features/auth'
 import { PageStack } from './features/page-stack/PageStack'
 
 const PrimitivesPreview = import.meta.env.DEV ? lazy(() => import('./dev/PrimitivesPreview')) : null
@@ -30,7 +31,11 @@ function App() {
     )
   }
 
-  return <PageStack />
+  return (
+    <AuthGate>
+      <PageStack />
+    </AuthGate>
+  )
 }
 
 export default App
