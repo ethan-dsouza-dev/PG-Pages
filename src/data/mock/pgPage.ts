@@ -1,5 +1,6 @@
 import { TZDate } from '@date-fns/tz'
 import { addDays, startOfDay } from 'date-fns'
+import { DEFAULT_RESET_TIME, latestResetBoundary } from '../../domain/dailyReset'
 import type { Goal, PGPage, Phase, Task } from '../../domain/types'
 
 /*
@@ -102,6 +103,9 @@ export function createMockPage(
     title: "Jake's First PG Page",
     version: 1,
     timeZone,
+    resetTime: DEFAULT_RESET_TIME,
+    // The fixture's checked items were ticked after today's reset already ran.
+    lastResetAt: latestResetBoundary(now, DEFAULT_RESET_TIME, timeZone).toISOString(),
     goals,
     tasks,
   }

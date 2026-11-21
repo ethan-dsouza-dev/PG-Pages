@@ -19,6 +19,8 @@ function page(): PGPage {
     title: "Jake's First PG Page",
     version: 1,
     timeZone: 'UTC',
+    resetTime: '00:00',
+    lastResetAt: '2026-10-10T00:00:00.000Z',
     goals: [goal('day-1', 'day'), goal('day-2', 'day', true), goal('month-1', 'month'), goal('theme-1', 'theme')],
     tasks: [
       task('today', '2026-10-10T09:00:00Z', '2026-10-10T10:00:00Z'),
