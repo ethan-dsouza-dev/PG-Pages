@@ -85,29 +85,35 @@ Task interactions (§6) apply wherever a task appears: on the time representatio
 
 ## 5. Day actions and reset
 
-- **LP-5.1 Reset Day.** Turns every checked (green) task and goal for the day back to unchecked (in-progress).
+- **LP-5.1 Reset Day.** Turns every **Done** (green) task, goal, and theme for the day back to **Unchecked**. **Missed** (red) items stay red. *(Resolves LP-OQ-2.)*
 - **LP-5.2 Change Reset Time.** Opens a control to set the daily reset time for this PG Page. Default **12:00 am**.
-- **LP-5.3 Automatic daily reset.** At the reset time, all **daily** tasks, goals, and themes return to in-progress. This is the only automatic, time-driven behaviour on the page.
+- **LP-5.3 Automatic daily reset.** At the reset time, all **daily** tasks, goals, and themes are reset the same way as Reset Day (LP-5.1): Done → Unchecked. *(Assumed to match LP-5.1; Missed items stay red.)* This is the only automatic, time-driven behaviour on the page.
 
 ---
 
 ## 6. Task interactions
 
 ### 6.1 Completion states (left click)
-Three states: **In-progress** (default; shown in the category colour: red/yellow/blue), **Checked** (green), **Incomplete** (red).
+Three states:
 
-- **LP-6.1 First-click confirmation.** Left-clicking an in-progress task asks the user to confirm they meant to check it off.
+| State | Meaning | Look |
+|---|---|---|
+| **Unchecked** | Default; not done yet | **Translucent** version of its category colour |
+| **Done** | Checked off | **Green** |
+| **Missed** | User marked it as not done | **Red** |
+
+- **LP-6.1 First-click confirmation.** Left-clicking an Unchecked task asks the user to confirm they meant to check it off.
 - **LP-6.2 One-click window.** Once the user has confirmed, any task can be checked with a single click for the next **60 seconds**. After 60s without a confirmation, LP-6.1 applies again.
-- **LP-6.3 Mark incomplete.** Pressing and holding a task for **3 seconds** sets it to Incomplete (red).
-- **LP-6.4 Incomplete → Checked.** Clicking an Incomplete task checks it (green) in one click.
-- **LP-6.5 Un-check.** Clicking a Checked task prompts *"Are you sure you mean to un-check this task?"*. Confirming returns it to In-progress.
+- **LP-6.3 Mark missed.** Pressing and holding a task for **3 seconds** sets it to Missed (red).
+- **LP-6.4 Missed → Done.** Clicking a Missed task marks it Done (green) in one click.
+- **LP-6.5 Un-check.** Clicking a Done task prompts *"Are you sure you mean to un-check this task?"*. Confirming returns it to Unchecked.
 
 | From | Action | To |
 |---|---|---|
-| In-progress | click (+ confirm unless within 60s window) | Checked |
-| Any | hold 3s | Incomplete |
-| Incomplete | click | Checked |
-| Checked | click + confirm | In-progress |
+| Unchecked | click (+ confirm unless within 60s window) | Done |
+| Any | hold 3s | Missed |
+| Missed | click | Done |
+| Done | click + confirm | Unchecked |
 
 ### 6.2 Right-click menu
 Right-clicking a task (on the time representation or in a folder) opens a menu with, in order:
@@ -195,10 +201,10 @@ The design goal is **short scrolls and more quick clicks**, not long scrolling.
 |---|---|---|
 | ~~LP-OQ-1~~ | ~~Sign-in providers conflict.~~ **Resolved:** Google OAuth for the MVP; other sign-in methods added later. See LP-2.6. | LP-2.5, LP-2.6 |
 | ~~LP-OQ-9~~ | ~~Signed-out use vs. auth gate.~~ **Resolved:** both are supported behind the `VITE_AUTH_ENABLED` flag (default off). See LP-2.5. | LP-2.5 |
-| LP-OQ-2 | Does "Reset Day" (LP-5.1) also clear **Incomplete** (red) items, or only green ones? | Reset semantics |
+| ~~LP-OQ-2~~ | ~~Does Reset Day clear red items?~~ **Resolved:** no, only Done (green) → Unchecked. See LP-5.1. | LP-5.1 |
 | LP-OQ-3 | Is the 60s one-click window (LP-6.2) measured from the *last* confirmation or the last check? Is it per session or per PG Page? | Check flow |
 | LP-OQ-4 | Where do **All Day** and **untimed** tasks appear on the time representation? | LP-3.11 |
-| LP-OQ-5 | Does the 3-second hold (LP-6.3) work from every state, including Checked? | State table |
+| LP-OQ-5 | Does the 3-second hold (LP-6.3) work from every state, including Done? | State table |
 | LP-OQ-6 | Is a goal/theme's daily check (LP-4.2) independent of its horizon, i.e. a month goal can be ticked each day and resets nightly? | Goal model |
 | LP-OQ-7 | Does the ad swap (LP-8.2) persist per PG Page or per user? | Ad model |
 | LP-OQ-8 | The "Select Task(s)" and "Check All" controls in the current mockup are not in the user stories. Keep, change, or drop? (See brief 06 / OQ-3.) | Day actions |
