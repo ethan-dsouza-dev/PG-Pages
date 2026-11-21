@@ -23,7 +23,8 @@ describe('MOCK_ADS', () => {
       expect(ad.image.alt.length).toBeGreaterThan(10)
       expect(ad.image.width).toBeGreaterThan(0)
       expect(ad.image.height).toBeGreaterThan(0)
-      expect(ad.href).toMatch(/^https:\/\//)
+      expect(ad.advertiserUrl).toMatch(/^https:\/\//)
+      expect(ad.description.length).toBeGreaterThan(20)
     }
     const captioned = MOCK_ADS.filter((a) => a.caption).length
     expect(captioned).toBeGreaterThanOrEqual(2)

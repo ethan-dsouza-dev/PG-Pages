@@ -38,7 +38,7 @@ export default function GalleryPreview() {
         <section key={label} aria-label={label}>
           <h2 className="mx-auto mb-4 max-w-page px-16 text-section">{label}</h2>
           <div className="h-gallery-trim bg-surface-gallery-trim" />
-          <GalleryWall ads={ads} />
+          <GalleryWall ads={ads} onOpenAd={() => {}} />
           <div className="h-gallery-trim bg-surface-gallery-trim" />
         </section>
       ))}

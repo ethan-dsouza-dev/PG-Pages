@@ -17,7 +17,9 @@ export const MOCK_ADS: readonly Ad[] = [
       width: 500,
       height: 400,
     },
-    href: 'https://example.com/prism-studio',
+    description:
+      'An independent design studio making bold, colourful brand identities, posters and murals for small businesses.',
+    advertiserUrl: 'https://example.com/prism-studio',
   },
   {
     id: 'ad-westside-museum',
@@ -29,7 +31,9 @@ export const MOCK_ADS: readonly Ad[] = [
       height: 1200,
     },
     caption: 'Join us at the Westside Museum',
-    href: 'https://example.com/westside-museum',
+    description:
+      'Modern and contemporary art on the west side, with late openings every Thursday and free entry for students.',
+    advertiserUrl: 'https://example.com/westside-museum',
   },
   {
     id: 'ad-canyon-galleries',
@@ -41,7 +45,9 @@ export const MOCK_ADS: readonly Ad[] = [
       height: 1183,
     },
     caption: 'Now showing: Irregular Forms',
-    href: 'https://example.com/canyon-galleries',
+    description:
+      'A family-run gallery showing emerging landscape painters. This season: Irregular Forms, a group show of new abstract work.',
+    advertiserUrl: 'https://example.com/canyon-galleries',
   },
   {
     id: 'ad-orbit-coffee',
@@ -52,7 +58,9 @@ export const MOCK_ADS: readonly Ad[] = [
       width: 1000,
       height: 800,
     },
-    href: 'https://example.com/orbit-coffee',
+    description:
+      'Small-batch coffee roasted every morning and shipped the same day. Subscriptions pause any time.',
+    advertiserUrl: 'https://example.com/orbit-coffee',
   },
   {
     id: 'ad-blockprint-books',
@@ -64,7 +72,9 @@ export const MOCK_ADS: readonly Ad[] = [
       height: 800,
     },
     caption: 'Stories worth the shelf space',
-    href: 'https://example.com/blockprint-books',
+    description:
+      'A neighbourhood bookshop with hand-picked fiction, art books and a reading club that meets every second Sunday.',
+    advertiserUrl: 'https://example.com/blockprint-books',
   },
   {
     id: 'ad-dusk-trails',
@@ -75,7 +85,9 @@ export const MOCK_ADS: readonly Ad[] = [
       width: 800,
       height: 1000,
     },
-    href: 'https://example.com/dusk-trails',
+    description:
+      'Hiking and camping gear for long evenings outdoors, plus guided sunset walks on the weekends.',
+    advertiserUrl: 'https://example.com/dusk-trails',
   },
   {
     id: 'ad-ripple-records',
@@ -87,7 +99,9 @@ export const MOCK_ADS: readonly Ad[] = [
       height: 1000,
     },
     caption: 'New pressings every Friday',
-    href: 'https://example.com/ripple-records',
+    description:
+      'New and used vinyl, listening booths, and fresh pressings from independent labels every Friday.',
+    advertiserUrl: 'https://example.com/ripple-records',
   },
   {
     id: 'ad-fieldnote-gardens',
@@ -98,6 +112,8 @@ export const MOCK_ADS: readonly Ad[] = [
       width: 1000,
       height: 800,
     },
-    href: 'https://example.com/fieldnote-gardens',
+    description:
+      'Native plants, seeds and planters, with free advice on making a small garden that looks after itself.',
+    advertiserUrl: 'https://example.com/fieldnote-gardens',
   },
 ]

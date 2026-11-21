@@ -5,9 +5,15 @@ import { logPlaceholder, placeholderAttrs } from './placeholder'
 type TextLinkSize = 'nav' | 'label' | 'meta'
 
 type Behavior =
-  | { href: string; onClick?: never; placeholder?: never }
-  | { onClick: () => void; href?: never; placeholder?: never }
-  | { placeholder: true; href?: never; onClick?: never }
+  | {
+      href: string
+      /** Opens in a new tab, without an opener or referrer, and says so to screen readers. */
+      external?: boolean
+      onClick?: never
+      placeholder?: never
+    }
+  | { onClick: () => void; disabled?: boolean; href?: never; external?: never; placeholder?: never }
+  | { placeholder: true; href?: never; external?: never; onClick?: never }
 
 type TextLinkProps = Behavior & {
   children: string
@@ -30,6 +36,14 @@ export function TextLink({ children, size = 'nav', className, ...behavior }: Tex
   )
 
   if (behavior.href !== undefined) {
+    if (behavior.external) {
+      return (
+        <a href={behavior.href} target="_blank" rel="noopener noreferrer" className={classes}>
+          {children}
+          <span className="sr-only">, opens in a new tab</span>
+        </a>
+      )
+    }
     return (
       <a href={behavior.href} className={classes}>
         {children}
@@ -52,7 +66,12 @@ export function TextLink({ children, size = 'nav', className, ...behavior }: Tex
   }
 
   return (
-    <button type="button" className={classes} onClick={behavior.onClick}>
+    <button
+      type="button"
+      className={cx(classes, 'disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline')}
+      onClick={behavior.onClick}
+      disabled={behavior.disabled}
+    >
       {children}
     </button>
   )
