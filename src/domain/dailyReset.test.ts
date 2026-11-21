@@ -80,17 +80,29 @@ describe('reset boundaries on DST days (America/New_York)', () => {
     expect(isResetDue(last, new Date('2026-11-01T13:00:00Z'), '08:00', tz)).toBe(true) // 08:00 EST
   })
 
-  it('fall back: a repeated 01:30 resets only once, at its second (EST) occurrence', () => {
+  it('fall back: a repeated 01:30 resets only once, at its first (EDT) occurrence', () => {
     const last = '2026-10-31T05:30:00.000Z' // yesterday's 01:30 EDT
-    // The first 01:30 (EDT, 05:30Z) passes without a reset…
-    expect(isResetDue(last, new Date('2026-11-01T05:45:00Z'), '01:30', tz)).toBe(false)
-    // …the second (EST, 06:30Z) triggers it…
-    expect(iso(latestResetBoundary(new Date('2026-11-01T06:30:00Z'), '01:30', tz))).toBe(
-      '2026-11-01T06:30:00.000Z',
+    expect(isResetDue(last, new Date('2026-11-01T05:29:00Z'), '01:30', tz)).toBe(false)
+    // The first 01:30 (EDT, 05:30Z) triggers the reset…
+    expect(iso(latestResetBoundary(new Date('2026-11-01T05:30:00Z'), '01:30', tz))).toBe(
+      '2026-11-01T05:30:00.000Z',
     )
-    expect(isResetDue(last, new Date('2026-11-01T06:30:00Z'), '01:30', tz)).toBe(true)
-    // …and nothing fires again later that day.
-    expect(isResetDue('2026-11-01T06:30:00.000Z', new Date('2026-11-01T23:00:00Z'), '01:30', tz)).toBe(false)
+    expect(isResetDue(last, new Date('2026-11-01T05:30:00Z'), '01:30', tz)).toBe(true)
+    // …and the second 01:30 (EST, 06:30Z) doesn't fire again.
+    expect(isResetDue('2026-11-01T05:30:00.000Z', new Date('2026-11-01T06:45:00Z'), '01:30', tz)).toBe(false)
+    expect(iso(nextResetBoundary(new Date('2026-11-01T06:45:00Z'), '01:30', tz))).toBe(
+      '2026-11-02T06:30:00.000Z',
+    )
+  })
+
+  it('does not depend on the machine time zone for page zones far from it', () => {
+    // 00:00 in Kolkata (UTC+5:30) and in Auckland during its DST (UTC+13).
+    expect(iso(latestResetBoundary(new Date('2026-10-10T12:00:00Z'), '00:00', 'Asia/Kolkata'))).toBe(
+      '2026-10-09T18:30:00.000Z',
+    )
+    expect(iso(latestResetBoundary(new Date('2026-10-10T12:00:00Z'), '00:00', 'Pacific/Auckland'))).toBe(
+      '2026-10-10T11:00:00.000Z',
+    )
   })
 })
 
