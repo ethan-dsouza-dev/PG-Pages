@@ -6,10 +6,11 @@ import { createMockPage } from '../data/mock/pgPage'
 import { GALLERY_AD_COUNT, pickAds } from '../domain/ads'
 import * as boards from '../domain/boards'
 import * as dayActions from '../domain/dayActions'
+import * as pages from '../domain/pages'
 import type { Ad, Board, BoardItem, Category, CategoryId, Goal, GoalScope, PGPage, Task } from '../domain/types'
 
-type PGPageState = {
-  page: PGPage
+/** Holds every PG Page; the selector hooks below read the active one. */
+type PGPageState = pages.PageCollection & {
   /** Picked once when the store is created: stable for the whole page load. */
   galleryAds: Ad[]
   /** Category boards below the gallery, in page order (OQ-18: fixed order). */
@@ -22,21 +23,39 @@ type PGPageState = {
   resetDay: (day: Date) => void
   /** Flips a board item todo ↔ done. Inactive items are ignored (OQ-16). */
   toggleBoardItem: (itemId: string) => void
+  /** LP-2.1: names the active page. */
+  renamePage: (name: string) => void
+  /** LP-2.2: adds an empty page and switches to it. */
+  createPage: () => void
+  /** LP-2.3: shows another page. */
+  switchPage: (pageId: string) => void
 }
 
 // Static UI phase: the page always comes from mock data (README rule 1).
-export const usePGPageStore = create<PGPageState>()((set) => ({
-  page: createMockPage(),
-  galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
-  boards: MOCK_BOARDS,
-  boardItems: MOCK_BOARD_ITEMS,
-  categories: MOCK_CATEGORIES,
-  toggleGoal: (goalId) => set((s) => ({ page: dayActions.toggleGoal(s.page, goalId) })),
-  toggleTask: (taskId) => set((s) => ({ page: dayActions.toggleTask(s.page, taskId) })),
-  checkAll: (day) => set((s) => ({ page: dayActions.checkAll(s.page, day) })),
-  resetDay: (day) => set((s) => ({ page: dayActions.resetDay(s.page, day) })),
-  toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
-}))
+export const usePGPageStore = create<PGPageState>()((set) => {
+  /** Runs a page reducer on the active page only. */
+  const onActive = (update: (page: PGPage) => PGPage) =>
+    set((s) => pages.updateActivePage(s, update))
+
+  return {
+    ...pages.collectionOf(createMockPage()),
+    galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
+    boards: MOCK_BOARDS,
+    boardItems: MOCK_BOARD_ITEMS,
+    categories: MOCK_CATEGORIES,
+    toggleGoal: (goalId) => onActive((p) => dayActions.toggleGoal(p, goalId)),
+    toggleTask: (taskId) => onActive((p) => dayActions.toggleTask(p, taskId)),
+    checkAll: (day) => onActive((p) => dayActions.checkAll(p, day)),
+    resetDay: (day) => onActive((p) => dayActions.resetDay(p, day)),
+    toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
+    renamePage: (name) => onActive((p) => pages.renamePage(p, name)),
+    createPage: () => set((s) => pages.addEmptyPage(s, crypto.randomUUID())),
+    switchPage: (pageId) => set((s) => pages.switchPage(s, pageId)),
+  }
+})
+
+/** The page every section shows. */
+const active = (s: PGPageState): PGPage => pages.activePage(s)
 
 /*
  * Per-section selector hooks. Reducers keep unchanged items by reference, so
@@ -44,20 +63,21 @@ export const usePGPageStore = create<PGPageState>()((set) => ({
  */
 
 export function useGoals(scope: GoalScope): Goal[] {
-  return usePGPageStore(useShallow((s) => s.page.goals.filter((g) => g.scope === scope)))
+  return usePGPageStore(useShallow((s) => active(s).goals.filter((g) => g.scope === scope)))
 }
 
 export function useTasks(): Task[] {
-  return usePGPageStore((s) => s.page.tasks)
+  return usePGPageStore((s) => active(s).tasks)
 }
 
 export function usePageMeta() {
   return usePGPageStore(
     useShallow((s) => ({
-      ownerName: s.page.ownerName,
-      title: s.page.title,
-      version: s.page.version,
-      timeZone: s.page.timeZone,
+      id: active(s).id,
+      ownerName: active(s).ownerName,
+      name: active(s).name,
+      version: active(s).version,
+      timeZone: active(s).timeZone,
     })),
   )
 }
@@ -75,6 +95,17 @@ export function usePGPageActions() {
       checkAll: s.checkAll,
       resetDay: s.resetDay,
     })),
+  )
+}
+
+/** Every PG Page, in "Your PG Pages" order. */
+export function usePages(): PGPage[] {
+  return usePGPageStore((s) => s.pages)
+}
+
+export function usePageCollectionActions() {
+  return usePGPageStore(
+    useShallow((s) => ({ renamePage: s.renamePage, createPage: s.createPage, switchPage: s.switchPage })),
   )
 }
 

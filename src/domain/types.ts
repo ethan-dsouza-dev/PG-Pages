@@ -41,7 +41,11 @@ export type Task = {
 export type PGPage = {
   id: string
   ownerName: string
-  title: string
+  /**
+   * The user's name for this page (LP-2.1), shown before "PG Page" in the
+   * header and footer, e.g. "Jake's First".
+   */
+  name: string
   version: number
   /** IANA time zone that defines the page's day boundaries. */
   timeZone: string

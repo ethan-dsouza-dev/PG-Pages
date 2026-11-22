@@ -1,14 +1,14 @@
-import { formatTitleLead } from '../../domain/pageTitle'
+import { displayName } from '../../domain/pages'
 import { usePageMeta } from '../../store/pgPageStore'
 import { TextLink } from '../../ui'
 
 /**
  * The deep-red band that ends the page (the `contentinfo` landmark, rendered
- * after `<main>`). "Customize" sits top right and the page name bottom right,
- * built from the same page meta as the header so the two never disagree.
+ * after `<main>`). "Customize" sits top right and the page name (LP-2.1, LP-9.3)
+ * bottom right, read from the same page meta as the header so the two never disagree.
  */
 export function PageFooter() {
-  const { ownerName } = usePageMeta()
+  const { name } = usePageMeta()
 
   return (
     <footer className="bg-surface-footer text-text-on-footer [--color-focus-ring:var(--color-focus-ring-inverse)]">
@@ -19,7 +19,7 @@ export function PageFooter() {
         </TextLink>
         <p className="max-w-footer-name text-right font-display text-section font-bold">
           {/* "PG Page" stays together, so the narrow measure breaks after the lead. */}
-          {formatTitleLead(ownerName)} PG{' '}Page
+          {displayName({ name })} PG{' '}Page
         </p>
       </div>
     </footer>

@@ -16,7 +16,7 @@ function page(): PGPage {
   return {
     id: 'p',
     ownerName: 'Jake',
-    title: "Jake's First PG Page",
+    name: "Jake's First",
     version: 1,
     timeZone: 'UTC',
     goals: [goal('day-1', 'day'), goal('day-2', 'day', true), goal('month-1', 'month'), goal('theme-1', 'theme')],
