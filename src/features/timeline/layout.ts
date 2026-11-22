@@ -29,6 +29,9 @@ export function timelineHeight(rowCount: number): number {
 
 export type DayIndex = 0 | 1 | 2
 
+/** What each visible day is called, by DayIndex. */
+export const DAY_NAMES = ['Yesterday', 'Today', 'Tomorrow'] as const
+
 export function clampDay(day: number): DayIndex {
   return Math.min(2, Math.max(0, day)) as DayIndex
 }

@@ -1,7 +1,6 @@
-import type { ScaleTime } from 'd3-scale'
 import type { Phase, Task } from '../../domain/types'
 
-export type TimeScale = ScaleTime<number, number>
+export type { TimeScale } from '../../domain/timeline'
 
 export type OpenPhaseHandler = (phase: Phase, taskTitle: string, trigger: SVGElement) => void
 

@@ -24,6 +24,9 @@ type PGPageState = pages.PageCollection & {
   boards: Board[]
   boardItems: Record<string, BoardItem>
   categories: Record<CategoryId, Category>
+  /** LP-3.7 "Show 24 hours". Store-only: resets on reload in this phase. */
+  showFullDay: boolean
+  setShowFullDay: (showFullDay: boolean) => void
   toggleGoal: (goalId: string) => void
   toggleTask: (taskId: string) => void
   checkAll: (day: Date) => void
@@ -64,6 +67,8 @@ export const usePGPageStore = create<PGPageState>()((set) => {
     boards: MOCK_BOARDS,
     boardItems: MOCK_BOARD_ITEMS,
     categories: MOCK_CATEGORIES,
+    showFullDay: false,
+    setShowFullDay: (showFullDay) => set({ showFullDay }),
     toggleGoal: (goalId) => onActive((p) => dayActions.toggleGoal(p, goalId)),
     toggleTask: (taskId) => onActive((p) => dayActions.toggleTask(p, taskId)),
     checkAll: (day) => onActive((p) => dayActions.checkAll(p, day)),
@@ -168,6 +173,12 @@ export function usePageCollectionActions() {
   return usePGPageStore(
     useShallow((s) => ({ renamePage: s.renamePage, createPage: s.createPage, switchPage: s.switchPage })),
   )
+}
+
+/* ---------- Timeline settings ---------- */
+
+export function useShowFullDay(): [boolean, (showFullDay: boolean) => void] {
+  return usePGPageStore(useShallow((s) => [s.showFullDay, s.setShowFullDay]))
 }
 
 /* ---------- Boards slice ---------- */
