@@ -66,8 +66,10 @@ export type Ad = {
   image: { src: string; alt: string; width: number; height: number }
   /** Advertiser tagline shown above the frame, e.g. "Join us at the museum". */
   caption?: string
-  /** Click-through URL. */
-  href: string
+  /** A sentence or two about the advertiser, shown in the ad's popup (LP-8.1). */
+  description: string
+  /** The advertiser's website, linked from the ad's popup (LP-8.1). */
+  advertiserUrl: string
 }
 
 /* ---------- Category boards (brief 09) ---------- */

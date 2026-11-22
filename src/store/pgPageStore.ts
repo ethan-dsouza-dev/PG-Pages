@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { MOCK_ADS } from '../data/mock/ads'
 import { MOCK_BOARD_ITEMS, MOCK_BOARDS, MOCK_CATEGORIES } from '../data/mock/boards'
 import { createMockPage } from '../data/mock/pgPage'
-import { GALLERY_AD_COUNT, pickAds } from '../domain/ads'
+import { changeWallAd, GALLERY_AD_COUNT, pickAds } from '../domain/ads'
 import * as boards from '../domain/boards'
 import * as dayActions from '../domain/dayActions'
 import * as taskActions from '../domain/taskActions'
@@ -11,7 +11,12 @@ import type { Ad, Board, BoardItem, Category, CategoryId, Goal, GoalScope, PGPag
 
 type PGPageState = {
   page: PGPage
-  /** Picked once when the store is created: stable for the whole page load. */
+  /** Every ad that may hang on the wall (OQ-10: the real source is still open). */
+  adPool: readonly Ad[]
+  /**
+   * Picked once when the store is created, so stable for the whole page load
+   * except for slots the user swaps with `changeGalleryAd`.
+   */
   galleryAds: Ad[]
   /** Category boards below the gallery, in page order (OQ-18: fixed order). */
   boards: Board[]
@@ -27,11 +32,18 @@ type PGPageState = {
   deleteTask: (taskId: string) => void
   /** Flips a board item todo ↔ done. Inactive items are ignored (OQ-16). */
   toggleBoardItem: (itemId: string) => void
+  /**
+   * Swaps the ad in gallery slot `slot` for one from the pool not already on
+   * the wall (LP-8.2). In memory only: whether the choice persists per page or
+   * per user is LP-OQ-7.
+   */
+  changeGalleryAd: (slot: number) => void
 }
 
 // Static UI phase: the page always comes from mock data (README rule 1).
 export const usePGPageStore = create<PGPageState>()((set) => ({
   page: createMockPage(),
+  adPool: MOCK_ADS,
   galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
   boards: MOCK_BOARDS,
   boardItems: MOCK_BOARD_ITEMS,
@@ -44,6 +56,8 @@ export const usePGPageStore = create<PGPageState>()((set) => ({
     set((s) => ({ page: taskActions.unscheduleTask(s.page, taskId, now) })),
   deleteTask: (taskId) => set((s) => ({ page: taskActions.deleteTask(s.page, taskId) })),
   toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
+  // TODO(LP-OQ-7): persist the swap per page or per user once that is decided.
+  changeGalleryAd: (slot) => set((s) => ({ galleryAds: changeWallAd(s.adPool, s.galleryAds, slot) })),
 }))
 
 /*
@@ -78,6 +92,18 @@ export function usePageMeta() {
 /** The ads hanging on the gallery wall for this page load. */
 export function useGalleryAds(): Ad[] {
   return usePGPageStore((s) => s.galleryAds)
+}
+
+/** True when the pool holds an ad that is not on the wall yet, so "Change ad" can do something. */
+export function useCanChangeGalleryAd(): boolean {
+  return usePGPageStore((s) => {
+    const hanging = new Set(s.galleryAds.map((ad) => ad.id))
+    return s.adPool.some((ad) => !hanging.has(ad.id))
+  })
+}
+
+export function useGalleryActions() {
+  return usePGPageStore(useShallow((s) => ({ changeGalleryAd: s.changeGalleryAd })))
 }
 
 export function usePGPageActions() {
