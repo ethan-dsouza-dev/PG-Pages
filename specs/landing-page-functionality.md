@@ -182,10 +182,10 @@ The design goal is **short scrolls and more quick clicks**, not long scrolling.
 ## 8. Ad gallery
 
 - **LP-8.1 Ad detail.** Clicking an ad (painting/poster) opens a popup with: a larger image, the ad's description, and a link to the advertiser's website (opens externally).
-- **LP-8.2 Swap ad.** The popup has a button to replace this ad slot with one of the **alternative approved ads** for that slot. The user's choice persists for their PG Page.
+- **LP-8.2 Swap ad.** The popup has a button to replace this ad slot with one of the **alternative approved ads** for that slot. The user's choice is saved **per user**, so it shows on all of their PG Pages, until the next weekly rotation (LP-8.5).
 - **LP-8.3 Approved only.** Only ads accepted by a PG Page Company reviewer are ever shown. Ads pending review never reach the landing page.
 - **LP-8.4 Edit gallery.** The user can put the gallery into an edit mode and scroll through available ads to choose which ones hang on their wall.
-- **LP-8.5 Weekly rotation.** Ads change every week. *(Like an end-of-year scholastic book catalogue: advertisers should make things people want to look at.)*
+- **LP-8.5 Weekly rotation.** Ads change every week. Rotation **replaces** the user's chosen ads too (from LP-8.2/8.4): choices last until the next rotation, then the user can pick again. *(Resolves LP-OQ-7.)* *(Like an end-of-year scholastic book catalogue: advertisers should make things people want to look at.)*
 - **LP-8.6 Ad type controls.** The user can choose which **types** of ads they see, e.g. to avoid ads tied to a personal addiction. Excluded types never appear in the gallery, in rotation, or as swap alternatives.
 
 ---
@@ -209,7 +209,7 @@ The design goal is **short scrolls and more quick clicks**, not long scrolling.
 
 - **LP-11.1 Encryption.** All user data shown on or saved from the landing page is encrypted.
 - **LP-11.2 No commercial data use.** No user data is collected for commercial distribution. Ad clicks/swaps must not be sold or shared for profiling.
-- **LP-11.3 Persistence.** Everything the user changes on this page (checks, names, birthdays, reset time, folders, ad choices, stickers, styles) is saved per PG Page and survives reload.
+- **LP-11.3 Persistence.** Everything the user changes on this page (checks, names, birthdays, reset time, folders, stickers, styles) is saved per PG Page and survives reload. Ad choices are the exception: they're saved per user (LP-8.2) and last until the weekly rotation (LP-8.5).
 
 ---
 
@@ -224,7 +224,7 @@ The design goal is **short scrolls and more quick clicks**, not long scrolling.
 | ~~LP-OQ-4~~ | ~~Where do All Day and untimed tasks appear?~~ **Resolved:** behind a button outside the time sheet; Google-Calendar-style all-day strip in Calendar view. See LP-3.11a. | LP-3.11 |
 | ~~LP-OQ-5~~ | ~~Does the 3-second hold work from every state?~~ **Resolved:** the hold opens an instance-actions dropdown instead of changing state. See LP-6.3. | LP-6.3 |
 | ~~LP-OQ-6~~ | ~~Is a goal/theme's daily check independent of its horizon?~~ **Resolved:** tasks reset daily and can be Missed; goals reset at their horizon and can be Missed; themes reset daily and can never be Missed. See LP-4.2. | LP-4.2, LP-5 |
-| LP-OQ-7 | Does the ad swap / gallery choice (LP-8.2, LP-8.4) persist per PG Page or per user? And when ads rotate weekly (LP-8.5), does a user's chosen ad stay or get replaced? | Ad model |
+| ~~LP-OQ-7~~ | ~~Ad choice: per page or per user? Kept or replaced on rotation?~~ **Resolved:** saved per user; replaced at the weekly rotation. See LP-8.2, LP-8.5. | Ad model |
 | LP-OQ-8 | **Partly resolved.** **Select Task(s)** is bulk task management: select several tasks, then right-click to apply one action to all of them (see LP-6.12). Still open: does **Check All** stay? | Day actions |
 | LP-OQ-10 | The 3-second hold no longer marks a task **Missed** (LP-6.3). How does a task or goal become Missed now: a menu entry, a different gesture, or something else? | §6.1 state table |
 | LP-OQ-11 | "See all task instances" lists instances "with the same task category". Does that mean instances of **this task**, or of every task in the same category/folder? | LP-6.3 |
