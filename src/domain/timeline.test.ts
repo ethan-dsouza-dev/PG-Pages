@@ -21,6 +21,7 @@ const UTC_NOW = new Date('2026-10-10T17:00:00Z')
 function task(overrides: Partial<Task> & Pick<Task, 'id'>): Task {
   return {
     title: overrides.id,
+    categoryId: 'productivity',
     start: '2026-10-10T09:00:00Z',
     end: '2026-10-10T10:00:00Z',
     timeZone: 'UTC',

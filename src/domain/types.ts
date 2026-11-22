@@ -3,21 +3,77 @@
  * Dates are ISO 8601 strings so fixtures and future persistence stay serializable.
  */
 
-export type GoalScope = 'day' | 'month' | 'theme'
+/** A goal's horizon (TW-3.2), or 'theme' for themes and values. */
+export type GoalScope = 'day' | 'week' | 'month' | 'year' | 'theme'
+
+/** Horizons a goal can have; themes are their own kind. */
+export type GoalHorizon = Exclude<GoalScope, 'theme'>
+
+/** When an item happens: drawn on the time sheet, a whole day, or a day with no time. */
+export type Timing = 'timed' | TaskTiming
+
+/** Optional time and repeat on a goal (TW-3.2a). Stored and editable; not drawn yet. */
+export type GoalSchedule = {
+  timing: Timing
+  start: string
+  end: string
+  repeat?: RepeatRule
+}
 
 export type Goal = {
   id: string
   title: string
   scope: GoalScope
   completed: boolean
+  /** Themes only: the month ('YYYY-MM') the theme is for (TW-3.3a). Absent means every month. */
+  month?: string
+  schedule?: GoalSchedule
 }
+
+/** A labelled point in time, drawn as a vertical line on its bar (TW-3.9, LP-3.13). */
+export type Milestone = {
+  id: string
+  label: string
+  at: string
+}
+
+/** How a task's or phase's subphases were made (TW-4.1). */
+export type SplitMode = 'even' | 'custom'
 
 export type Phase = {
   id: string
   title: string
   start: string
   end: string
+  /** Who the subphase is assigned to (TW-4.4). Free text. */
+  member?: string
+  milestones?: Milestone[]
+  /** How `subphases` were split. */
+  split?: SplitMode
   subphases?: Phase[]
+}
+
+/** 0 = Sunday … 6 = Saturday, as `Date#getDay`. */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+export type RepeatPreset = 'daily' | 'weekly' | 'monthly' | 'custom'
+export type RepeatUnit = 'day' | 'week' | 'month'
+export type RepeatEnd = { type: 'never' } | { type: 'on'; date: string } | { type: 'after'; count: number }
+
+/**
+ * How a task repeats (TW-3.8). Every occurrence is stored as its own Task in
+ * the series (`seriesId`), so each keeps its own status. TODO(OQ-7): becomes an
+ * RRULE once persistence lands.
+ */
+export type RepeatRule = {
+  /** What the user picked, so the form reopens the same way. */
+  preset: RepeatPreset
+  /** Every N units. */
+  every: number
+  unit: RepeatUnit
+  /** Weekly custom repeats: which weekdays. */
+  weekdays?: Weekday[]
+  ends: RepeatEnd
 }
 
 // TODO(OQ-7): reconcile with the PROJECT_BRIEF `Event` model (source, recurrence,
@@ -34,6 +90,12 @@ export type TaskTiming = 'all-day' | 'untimed'
 export type Task = {
   id: string
   title: string
+  /** The board category the task lives in (TW-3.4). Its folder is the board group listing it. */
+  categoryId: CategoryId
+  /** Shown in the board's Social lane (TW-3.5). */
+  social?: boolean
+  /** Muted on the boards and not checkable (OQ-16). */
+  inactive?: boolean
   start: string
   end: string
   timing?: TaskTiming
@@ -46,6 +108,11 @@ export type Task = {
   seriesId?: string
   /** Rendered as the dark strip under the bar; absent means no strip. */
   phases?: Phase[]
+  /** How `phases` were split (TW-4.1). */
+  split?: SplitMode
+  milestones?: Milestone[]
+  /** Set on every occurrence of a repeating series (TW-3.8). */
+  repeat?: RepeatRule
   /**
    * Taken off the schedule (LP-6.9 "Remove"): hidden from the timeline but
    * still part of the page. Absent means scheduled.
@@ -70,6 +137,8 @@ export type PGPage = {
   lastResetAt: string
   goals: Goal[]
   tasks: Task[]
+  /** The page's folders (LP-7). Groups list task keys (`seriesId ?? id`). */
+  boards: Board[]
 }
 
 /** Anything with an ISO start and end, e.g. a Task or a Phase. */
@@ -122,9 +191,6 @@ export type BoardItem = {
   /** When the item lands on the day schedule. Absent means unscheduled (LP-7.9). */
   schedule?: BoardItemSchedule
 }
-
-/** 0 = Sunday … 6 = Saturday, as `Date#getDay`. */
-export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 /**
  * Where a board item shows up in the day schedule (LP-7.8). Dates are calendar

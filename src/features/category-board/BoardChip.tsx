@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { phaseSegments } from '../../domain/phaseSegments'
 import type { BoardItem } from '../../domain/types'
 import { cx, PhaseBar } from '../../ui'
+import { useBoardActionsContext } from './boardActions'
 
 type BoardChipProps = {
   item: BoardItem
@@ -36,8 +37,9 @@ export function BoardChip({ item, onToggle, className, style }: BoardChipProps) 
   const inactive = item.status === 'inactive'
   const segments = item.span && item.phases?.length ? phaseSegments(item.span, item.phases) : []
   const hasStrip = (item.phases?.length ?? 0) > 0
+  const actions = useBoardActionsContext()
 
-  return (
+  const chip = (
     <button
       type="button"
       title={item.title}
@@ -66,4 +68,5 @@ export function BoardChip({ item, onToggle, className, style }: BoardChipProps) 
       )}
     </button>
   )
+  return actions ? actions.wrapChip(item.id, chip) : chip
 }

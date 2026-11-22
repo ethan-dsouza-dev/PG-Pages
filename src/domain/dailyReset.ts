@@ -135,15 +135,40 @@ export function isMonthResetDue(
  * since `page.lastResetAt`. Done → Unchecked only. Records `now` as
  * `lastResetAt`.
  */
+/** The most recent reset boundary on a Sunday (weeks start on Sunday, as the calendar view does). */
+export function latestWeekResetBoundary(now: Date, resetTime: ResetTime, timeZone: string): Date {
+  const local = new TZDate(now, timeZone)
+  const sunday = (back: number) =>
+    resetInstantOn(local.getFullYear(), local.getMonth(), local.getDate() - local.getDay() - back, resetTime, timeZone)
+  const thisWeeks = sunday(0)
+  return thisWeeks <= now ? thisWeeks : sunday(7)
+}
+
+/** The most recent reset boundary on January 1st. */
+export function latestYearResetBoundary(now: Date, resetTime: ResetTime, timeZone: string): Date {
+  const local = new TZDate(now, timeZone)
+  const thisYears = resetInstantOn(local.getFullYear(), 0, 1, resetTime, timeZone)
+  return thisYears <= now ? thisYears : resetInstantOn(local.getFullYear() - 1, 0, 1, resetTime, timeZone)
+}
+
+/**
+ * The automatic reset (LP-5.3, LP-4.2): what Reset Day clears, plus week
+ * goals on the first reset of a week, month goals on the first reset of a
+ * month, and year goals on the first reset of a year.
+ */
 export function applyDailyReset(page: PGPage, now: Date): PGPage {
   const dayReset = resetDay(page, now)
-  const newMonth = isMonthResetDue(page.lastResetAt, now, page.resetTime, page.timeZone)
-  const goals =
-    newMonth && dayReset.goals.some((g) => g.scope === 'month' && g.completed)
-      ? dayReset.goals.map((g: Goal) =>
-          g.scope === 'month' && g.completed ? { ...g, completed: false } : g,
-        )
-      : dayReset.goals
+  const last = new Date(page.lastResetAt)
+  const due = {
+    week: last < latestWeekResetBoundary(now, page.resetTime, page.timeZone),
+    month: isMonthResetDue(page.lastResetAt, now, page.resetTime, page.timeZone),
+    year: last < latestYearResetBoundary(now, page.resetTime, page.timeZone),
+  }
+  const clears = (g: Goal) =>
+    g.completed && ((g.scope === 'week' && due.week) || (g.scope === 'month' && due.month) || (g.scope === 'year' && due.year))
+  const goals = dayReset.goals.some(clears)
+    ? dayReset.goals.map((g: Goal) => (clears(g) ? { ...g, completed: false } : g))
+    : dayReset.goals
   return { ...dayReset, goals, lastResetAt: now.toISOString() }
 }
 

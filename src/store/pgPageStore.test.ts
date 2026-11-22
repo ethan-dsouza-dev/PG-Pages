@@ -1,12 +1,13 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMockPage } from '../data/mock/pgPage'
-import { collectionOf } from '../domain/pages'
+import { activePage, collectionOf } from '../domain/pages'
 import { GALLERY_AD_COUNT } from '../domain/ads'
-import { MOCK_BOARD_ITEMS } from '../data/mock/boards'
+import { representativeTask, tasksForKey } from '../domain/boardTasks'
+import { calendarDate } from '../domain/todaySplit'
 import {
   useBoardActions,
-  useBoardItems,
+  useBoards,
   useGalleryAds,
   useGoals,
   usePageCollectionActions,
@@ -125,27 +126,39 @@ describe('pgPageStore', () => {
     })
   })
 
-  describe('boards slice', () => {
+  describe('boards slice (board chips are the page\'s tasks, TW-OQ-1)', () => {
     beforeEach(() => {
-      usePGPageStore.setState({ boardItems: MOCK_BOARD_ITEMS })
+      usePGPageStore.setState(collectionOf(createMockPage()))
     })
 
-    it('toggles a board item between todo and done', () => {
-      const items = renderHook(() => useBoardItems())
+    const todaysClean = () => {
+      const page = activePage(usePGPageStore.getState())
+      const today = calendarDate(new Date(), page.timeZone)
+      return representativeTask(tasksForKey(page.tasks, 'sc-clean-clean'), today, page.timeZone)!
+    }
+
+    it("toggles the task a chip stands for: today's occurrence", () => {
       const actions = renderHook(() => useBoardActions())
+      expect(todaysClean().completed).toBe(false)
       act(() => actions.result.current.toggleBoardItem('sc-clean-clean'))
-      expect(items.result.current['sc-clean-clean'].status).toBe('done')
+      expect(todaysClean().completed).toBe(true)
       act(() => actions.result.current.toggleBoardItem('sc-clean-clean'))
-      expect(items.result.current['sc-clean-clean'].status).toBe('todo')
+      expect(todaysClean().completed).toBe(false)
     })
 
-    it('ignores inactive items', () => {
-      const items = renderHook(() => useBoardItems())
+    it('ignores inactive tasks', () => {
       const actions = renderHook(() => useBoardActions())
-      const before = items.result.current
-      expect(before['sc-unsorted-meet-design'].status).toBe('inactive')
+      const before = activePage(usePGPageStore.getState())
       act(() => actions.result.current.toggleBoardItem('sc-unsorted-meet-design'))
-      expect(items.result.current).toBe(before)
+      expect(activePage(usePGPageStore.getState())).toBe(before)
+    })
+
+    it('reads boards from the active page', () => {
+      const boards = renderHook(() => useBoards())
+      expect(boards.result.current.map((b) => b.id)).toEqual(['board-productivity', 'board-self-care', 'board-leisure'])
+      const actions = renderHook(() => usePageCollectionActions())
+      act(() => actions.result.current.createPage())
+      expect(boards.result.current.every((b) => b.groups.every((g) => g.itemIds.length === 0))).toBe(true)
     })
   })
 })

@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import {
+  clampToWindow,
   getTimelineWindow,
   getUntimedTasksForDay,
   getVisibleHours,
@@ -8,13 +9,18 @@ import {
 } from '../../domain/timeline'
 import { formatDayLabel } from '../../domain/timelineFormat'
 import type { Task } from '../../domain/types'
-import { usePageMeta, usePGPageActions, useScheduledTasks, useShowFullDay } from '../../store/pgPageStore'
+import {
+  usePageMeta,
+  usePGPageActions,
+  useScheduledTasks,
+  useShowFullDay,
+  useTaskWindowActions,
+} from '../../store/pgPageStore'
 import { AddChip, Panel } from '../../ui'
 import { AllDayPopover } from './AllDayPopover'
 import { DAY_NAMES, type DayIndex } from './layout'
 import { DeleteTaskDialog } from './DeleteTaskDialog'
 import { CurrentTimeText } from './NowIndicator'
-import { PhaseDetail, type OpenPhase } from './PhaseDetail'
 import { DayNav, WeekNav } from './TimelineNav'
 import { TimelineScroller, type TimelineScrollerHandle } from './TimelineScroller'
 import type { OpenPhaseHandler, RequestDeleteHandler } from './types'
@@ -30,21 +36,20 @@ export function TimelinePanel() {
   const [showFullDay, setShowFullDay] = useShowFullDay()
   const hours = getVisibleHours(window, tasks, showFullDay)
   // LP-3.11a: All Day and untimed tasks live behind the All Day button, not on the sheet.
-  const rows = groupTasksIntoRows(tasks.filter(isTimed))
+  // Only tasks inside the three visible days get a row, so far-off tasks leave no empty rows.
+  const rows = groupTasksIntoRows(tasks.filter((t) => isTimed(t) && clampToWindow(t, window) !== null))
   const fullDayId = useId()
 
   const [visibleDay, setVisibleDay] = useState<DayIndex>(1)
-  const [openPhase, setOpenPhase] = useState<OpenPhase | null>(null)
   const scrollerRef = useRef<TimelineScrollerHandle>(null)
-  const phaseTriggerRef = useRef<SVGElement | null>(null)
   const { deleteTask } = usePGPageActions()
   const [pendingDelete, setPendingDelete] = useState<Task | null>(null)
   const deleteTriggerRef = useRef<SVGElement | null>(null)
 
-  const handleOpenPhase: OpenPhaseHandler = (phase, taskTitle, trigger) => {
-    phaseTriggerRef.current = trigger
-    setOpenPhase({ phase, taskTitle })
-  }
+  const { openTaskWindow } = useTaskWindowActions()
+  // TW-1.4: clicking a phase opens the task in the window, slid to that subphase.
+  const handleOpenPhase: OpenPhaseHandler = (task, phase) =>
+    openTaskWindow({ mode: 'edit', kind: 'task', taskId: task.id, phasePath: [phase.id] })
 
   const handleRequestDelete: RequestDeleteHandler = (task, trigger) => {
     deleteTriggerRef.current = trigger
@@ -97,19 +102,13 @@ export function TimelinePanel() {
           <span aria-hidden="true" className="text-label">
             Add Timed Task
           </span>
-          {/* PLACEHOLDER(05): creating tasks is out of scope. */}
-          <AddChip label="Add Timed Task" size="compact" placeholder />
+          <AddChip
+            label="Add Timed Task"
+            size="compact"
+            onClick={() => openTaskWindow({ mode: 'new', prefill: { kind: 'task', timing: 'timed' } })}
+          />
         </div>
       </Panel>
-      <PhaseDetail
-        open={openPhase}
-        window={window}
-        onClose={() => setOpenPhase(null)}
-        onCloseAutoFocus={(event) => {
-          event.preventDefault()
-          phaseTriggerRef.current?.focus()
-        }}
-      />
       <DeleteTaskDialog
         task={pendingDelete}
         onProceed={proceedDelete}

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMockPage } from '../../data/mock/pgPage'
 import { usePGPageStore } from '../../store/pgPageStore'
+import { TaskWindowHost } from '../task-window/TaskWindowHost'
 import { TimelinePanel } from './TimelinePanel'
 import { activePage, collectionOf } from '../../domain/pages'
 
@@ -24,16 +25,17 @@ describe('task context menu', () => {
     vi.restoreAllMocks()
   })
 
-  it('lists Edit, Create new instance, Duplicate, Remove, Delete in order', async () => {
+  it('lists Edit, Create new instance, See instances, Duplicate, Remove, Delete in order', async () => {
     const user = userEvent.setup()
     render(<TimelinePanel />)
     const menu = await openMenu(user, taskBar('Weekly FS Project'))
 
     const items = within(menu).getAllByRole('menuitem')
     expect(items.map((i) => i.textContent)).toEqual([
-      'Edit, coming soon',
-      'Create new instance, coming soon',
-      'Duplicate, coming soon',
+      'Edit',
+      'Create new instance',
+      'See instances',
+      'Duplicate',
       'Remove',
       'Delete',
     ])
@@ -48,16 +50,42 @@ describe('task context menu', () => {
     expect(screen.getByRole('menu', { name: 'Actions for Weekly FS Project' })).toBeInTheDocument()
   })
 
-  it('logs the placeholder items without changing the task', async () => {
+  it('Duplicate opens the window filled in, and Save adds a new task (LP-6.8)', async () => {
     const user = userEvent.setup()
-    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
-    render(<TimelinePanel />)
+    render(
+      <>
+        <TimelinePanel />
+        <TaskWindowHost />
+      </>,
+    )
+    const before = activePage(usePGPageStore.getState()).tasks.length
     const menu = await openMenu(user, taskBar('Weekly FS Project'))
 
-    await user.click(within(menu).getByRole('menuitem', { name: /^Duplicate/ }))
-    expect(info).toHaveBeenCalledWith(expect.stringContaining('Duplicate'))
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(activePage(usePGPageStore.getState()).tasks).toHaveLength(createMockPage().tasks.length)
+    await user.click(within(menu).getByRole('menuitem', { name: 'Duplicate' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Duplicate task' })
+    expect(within(dialog).getByRole('textbox', { name: 'Label' })).toHaveValue('Weekly FS Project')
+
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const tasks = activePage(usePGPageStore.getState()).tasks
+    expect(tasks).toHaveLength(before + 1)
+    expect(tasks.filter((t) => t.title === 'Weekly FS Project' && !t.unscheduled)).toHaveLength(2)
+  })
+
+  it('Edit opens the window with the saved values (LP-6.6)', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <TimelinePanel />
+        <TaskWindowHost />
+      </>,
+    )
+    const menu = await openMenu(user, taskBar('Pre-reading'))
+    await user.click(within(menu).getByRole('menuitem', { name: 'Edit' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Edit task' })
+    expect(within(dialog).getByRole('textbox', { name: 'Label' })).toHaveValue('Pre-reading')
+    // The tab can't change while editing (TW-2.3).
+    expect(within(dialog).getByRole('tab', { name: 'Goal' })).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('Remove takes the task off the timeline but keeps it in the page', async () => {

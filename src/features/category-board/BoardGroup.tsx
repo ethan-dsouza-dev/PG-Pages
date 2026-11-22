@@ -2,6 +2,7 @@ import { useId, type CSSProperties } from 'react'
 import { COMPACT_LANE_CAP, COMPACT_PRIMARY_CAP, placeItems, visibleSlice } from '../../domain/boards'
 import type { Board, BoardGroup as BoardGroupData, BoardItem, CategoryId } from '../../domain/types'
 import { cx, SeeAllButton } from '../../ui'
+import { AddToFolderButton } from './AddToFolderButton'
 import { BoardChip } from './BoardChip'
 import { groupItemRows, laneLines, primaryCell } from './layout'
 
@@ -73,9 +74,12 @@ export function BoardGroup({ group, scope, depth = 0, row, parentPath = [] }: Bo
     >
       <div className="relative z-2 col-start-[primary-start] row-start-1 flex min-w-0 flex-col justify-center self-center">
         {group.note && <p className="text-caption">{group.note}</p>}
-        <Heading id={headingId} className="font-body text-group font-medium break-words">
-          {group.title}
-        </Heading>
+        <div className="flex min-w-0 items-center gap-2">
+          <Heading id={headingId} className="font-body text-group font-medium break-words">
+            {group.title}
+          </Heading>
+          <AddToFolderButton folderId={group.id} title={group.title} />
+        </div>
       </div>
 
       {isEmpty && <p className="sr-only">No items</p>}

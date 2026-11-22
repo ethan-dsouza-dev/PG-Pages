@@ -90,6 +90,8 @@ export function Board({ board, categories, items, onToggleItem, headingId, today
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Escape' || view === 'root') return
+    // Escape inside a chip's menu (a portal) closes the menu, not the folder.
+    if (!event.currentTarget.contains(event.target as Node)) return
     event.preventDefault()
     event.stopPropagation()
     up()

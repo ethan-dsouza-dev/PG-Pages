@@ -6,6 +6,7 @@ import { cx } from '../../ui'
 import type { BoardScope } from './BoardGroup'
 import { isFromControl } from './clicks'
 import { isLeaf } from './folderPath'
+import { AddToFolderButton } from './AddToFolderButton'
 import { ItemBand } from './ItemBand'
 
 type FolderBodyProps = {
@@ -70,9 +71,12 @@ export function FolderBody({ group, scope, path, role, capped = false, depth = 0
       <div className="relative z-2 col-[primary-start/primary-end] flex min-w-0 items-end gap-3">
         <div className="flex min-w-0 flex-col">
           {group.note && <p className="text-caption">{group.note}</p>}
-          <Heading id={headingId} className="font-body text-group font-medium break-words">
-            {group.title}
-          </Heading>
+          <div className="flex min-w-0 items-center gap-2">
+            <Heading id={headingId} className="font-body text-group font-medium break-words">
+              {group.title}
+            </Heading>
+            <AddToFolderButton folderId={group.id} title={group.title} />
+          </div>
         </div>
         {!isOpen && (
           <button

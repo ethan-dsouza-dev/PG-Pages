@@ -9,7 +9,7 @@ function goal(id: string, scope: Goal['scope'], completed = false): Goal {
 }
 
 function task(id: string, start: string, end: string, completed = false): Task {
-  return { id, title: id, start, end, timeZone: 'UTC', completed }
+  return { id, title: id, categoryId: 'productivity', start, end, timeZone: 'UTC', completed }
 }
 
 function page(): PGPage {
@@ -21,6 +21,7 @@ function page(): PGPage {
     timeZone: 'UTC',
     resetTime: '00:00',
     lastResetAt: '2026-10-10T00:00:00.000Z',
+    boards: [],
     goals: [goal('day-1', 'day'), goal('day-2', 'day', true), goal('month-1', 'month'), goal('theme-1', 'theme')],
     tasks: [
       task('today', '2026-10-10T09:00:00Z', '2026-10-10T10:00:00Z'),

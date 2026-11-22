@@ -8,6 +8,7 @@ import { formatDayLabel } from '../../domain/timelineFormat'
 import { usePGPageStore } from '../../store/pgPageStore'
 import { TEST_ELEMENT_WIDTH } from '../../test/setup'
 import { TIMELINE } from './layout'
+import { TaskWindowHost } from '../task-window/TaskWindowHost'
 import { TimelinePanel } from './TimelinePanel'
 
 const dayWidth = Math.round(TEST_ELEMENT_WIDTH * TIMELINE.dayWidthRatio)
@@ -40,16 +41,25 @@ describe('TimelinePanel', () => {
     expect(updated).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('opens a phase with its nested sub-phases and returns focus on close', async () => {
+  it('opens a phase in the task window, on its subphase panel, and returns focus on close (TW-1.4)', async () => {
     const user = userEvent.setup()
-    render(<TimelinePanel />)
+    render(
+      <>
+        <TimelinePanel />
+        <TaskWindowHost />
+      </>,
+    )
     const phase = screen.getByRole('button', { name: /^Research phase of F101 Assignment/ })
 
     await user.click(phase)
-    const dialog = screen.getByRole('dialog', { name: 'Research' })
-    expect(dialog).toHaveTextContent('Find sources')
-    expect(dialog).toHaveTextContent('Take notes')
+    const dialog = await screen.findByRole('dialog', { name: 'Edit task' })
+    expect(within(dialog).getByRole('textbox', { name: 'Label (optional)' })).toHaveValue('Research')
+    expect(within(dialog).getByRole('button', { name: 'Edit Find sources' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Edit Take notes' })).toBeInTheDocument()
 
+    // Escape slides back to the task first, then closes (no changes, no prompt).
+    await user.keyboard('{Escape}')
+    expect(within(dialog).getByRole('textbox', { name: 'Label' })).toHaveValue('F101 Assignment')
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(phase).toHaveFocus()
@@ -77,9 +87,10 @@ describe('TimelinePanel', () => {
     expect(scrollTo).toHaveBeenLastCalledWith(expect.objectContaining({ left: maxScroll }))
   })
 
-  it('renders week navigation and Add Timed Task as placeholders', () => {
+  it('renders week navigation as placeholders and Add Timed Task as a real button', () => {
     render(<TimelinePanel />)
-    for (const name of ['Last week', 'This week', 'Next week', 'Add Timed Task']) {
+    expect(screen.getByRole('button', { name: 'Add Timed Task' })).not.toHaveAttribute('aria-disabled')
+    for (const name of ['Last week', 'This week', 'Next week']) {
       expect(screen.getByRole('button', { name: `${name}, coming soon` })).toHaveAttribute(
         'aria-disabled',
         'true',
@@ -93,7 +104,9 @@ describe('TimelinePanel', () => {
     const sheet = screen.getByRole('group', { name: /Tasks from yesterday to tomorrow/ })
     expect(within(sheet).queryByRole('button', { name: /birthday|Pay rent/ })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'All Day (2)' }))
+    // The boards' daily routines are on today's schedule too, so the count depends on the weekday.
+    const allDay = screen.getByRole('button', { name: /^All Day \(\d+\)$/ })
+    await user.click(allDay)
     const popover = screen.getByRole('dialog', { name: /All Day: Today/ })
     expect(popover).toHaveTextContent("Grandma's birthday")
     expect(popover).toHaveTextContent('Pay rent, done')
@@ -101,7 +114,7 @@ describe('TimelinePanel', () => {
 
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'All Day (2)' })).toHaveFocus()
+    expect(allDay).toHaveFocus()
   })
 
   it('stretches the day to 24 hours from the Show 24 hours checkbox', async () => {

@@ -113,7 +113,7 @@ function goal(id: string, scope: Goal['scope'], completed: boolean): Goal {
 }
 
 function task(id: string, start: string, end: string, completed: boolean): Task {
-  return { id, title: id, start, end, timeZone: 'UTC', completed }
+  return { id, title: id, categoryId: 'productivity', start, end, timeZone: 'UTC', completed }
 }
 
 function page(overrides: Partial<PGPage> = {}): PGPage {
@@ -125,6 +125,7 @@ function page(overrides: Partial<PGPage> = {}): PGPage {
     timeZone: 'UTC',
     resetTime: '00:00',
     lastResetAt: '2026-10-10T00:00:00.000Z',
+    boards: [],
     goals: [goal('day-1', 'day', true), goal('month-1', 'month', true), goal('theme-1', 'theme', true)],
     tasks: [
       task('today', '2026-10-11T09:00:00Z', '2026-10-11T10:00:00Z', true),
@@ -161,6 +162,27 @@ describe('applyDailyReset', () => {
     // The next daily reset that month leaves month goals alone again.
     const rechecked = { ...after, goals: after.goals.map((g) => ({ ...g, completed: true })) }
     expect(doneIds(applyDailyResetIfDue(rechecked, new Date('2026-11-04T00:00:00Z')))).toEqual(['month-1'])
+  })
+})
+
+describe('week and year goals (LP-4.2)', () => {
+  const goals = [goal('week-1', 'week', true), goal('year-1', 'year', true)]
+  const done = (p: PGPage) => p.goals.filter((g) => g.completed).map((g) => g.id)
+
+  it('mid-week: week and year goals stay checked', () => {
+    // 2026-10-10 is a Saturday; the reset at 00:00 on the 11th starts a new week (Sunday).
+    const p = page({ goals, lastResetAt: '2026-10-11T00:00:00.000Z' })
+    expect(done(applyDailyReset(p, new Date('2026-10-12T00:00:00Z')))).toEqual(['week-1', 'year-1'])
+  })
+
+  it('first reset of a week unchecks week goals only', () => {
+    const p = page({ goals })
+    expect(done(applyDailyReset(p, new Date('2026-10-11T00:00:00Z')))).toEqual(['year-1'])
+  })
+
+  it('first reset of a year unchecks year goals', () => {
+    const p = page({ goals, lastResetAt: '2026-12-31T00:00:00.000Z' })
+    expect(done(applyDailyReset(p, new Date('2027-01-01T00:00:00Z')))).toEqual(['week-1'])
   })
 })
 
