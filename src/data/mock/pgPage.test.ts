@@ -19,7 +19,11 @@ describe('createMockPage', () => {
   })
 
   it('lays out the mockup rows in order', () => {
-    const rows = groupTasksIntoRows(page.tasks.filter(isTimed))
+    // As the timeline does: scheduled, timed, and inside the three visible days.
+    const window = getTimelineWindow(now, 'UTC')
+    const rows = groupTasksIntoRows(
+      page.tasks.filter((t) => !t.unscheduled && isTimed(t) && clampToWindow(t, window) !== null),
+    )
     expect(rows.map((r) => r[0].title)).toEqual([
       'Make the bed',
       'F101 Assignment',
@@ -43,12 +47,23 @@ describe('createMockPage', () => {
     })
   })
 
-  it('has All Day and untimed tasks today', () => {
+  it("has All Day and untimed tasks today, including the boards' daily routines", () => {
     const today = getTimelineWindow(now, 'UTC').days[1]
-    expect(getUntimedTasksForDay(page.tasks, today, 'UTC').map((t) => t.title)).toEqual([
-      "Grandma's birthday",
-      'Pay rent',
-    ])
+    const titles = getUntimedTasksForDay(page.tasks.filter((t) => !t.unscheduled), today, 'UTC').map((t) => t.title)
+    expect(titles.slice(0, 2)).toEqual(["Grandma's birthday", 'Pay rent'])
+    // 2026-10-10 is a Saturday: "Clean your room" repeats daily on three boards; weekday items don't show.
+    expect(titles.filter((t) => t === 'Clean your room')).toHaveLength(3)
+    expect(titles).not.toContain('Meet Design Group')
+  })
+
+  it('files every task in exactly one folder (TW-OQ-1)', () => {
+    const keys = new Set(page.tasks.map((t) => t.seriesId ?? t.id))
+    const listed = page.boards.flatMap((b) => {
+      const walk = (gs: typeof b.groups): string[] => gs.flatMap((g) => [...g.itemIds, ...walk(g.children ?? [])])
+      return walk(b.groups)
+    })
+    expect(new Set(listed)).toEqual(keys)
+    expect(listed).toHaveLength(keys.size)
   })
 
   it('only references goals that exist', () => {

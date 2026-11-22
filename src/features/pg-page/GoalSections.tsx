@@ -1,11 +1,16 @@
 import { GoalSection } from './GoalSection'
 
-/** Day goals, month goals, and the month's themes and values. */
+/**
+ * Day goals, month goals, and the month's themes and values. Week and year
+ * goals (TW-3.2) get their own sections once there are any.
+ */
 export function GoalSections() {
   return (
     <div className="flex flex-col gap-10">
       <GoalSection title="Goals for the day" scope="day" addLabel="Add day goal" />
+      <GoalSection title="Goals for the week" scope="week" addLabel="Add week goal" hideWhenEmpty />
       <GoalSection title="Goals for the month" scope="month" addLabel="Add month goal" />
+      <GoalSection title="Goals for the year" scope="year" addLabel="Add year goal" hideWhenEmpty />
       <GoalSection
         title="Themes and Values for the month"
         scope="theme"

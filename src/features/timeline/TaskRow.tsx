@@ -2,7 +2,7 @@ import { useId, useRef, type KeyboardEvent } from 'react'
 import { clampToWindow, type TimelineWindow } from '../../domain/timeline'
 import { describeSpan } from '../../domain/timelineFormat'
 import type { Phase, Task } from '../../domain/types'
-import { usePGPageActions } from '../../store/pgPageStore'
+import { usePGPageActions, useTaskWindowActions } from '../../store/pgPageStore'
 import { cx } from '../../ui'
 import { TIMELINE } from './layout'
 import { focusTimelineScroller, isContextMenuKey, openContextMenuFromKeyboard } from './contextMenuKeys'
@@ -133,8 +133,21 @@ function TaskBar({ task, top, scale, window, onToggle, onRemove, onRequestDelete
           </text>
         </g>
       </TaskContextMenu>
+      {task.milestones?.map((m) => (
+        <MilestoneMark
+          key={m.id}
+          task={task}
+          label={m.label}
+          at={m.at}
+          top={top}
+          height={barHeight}
+          scale={scale}
+          window={window}
+        />
+      ))}
       {phases.length > 0 && (
         <PhaseStrip
+          task={task}
           phases={phases}
           taskTitle={task.title}
           top={top + barHeight}
@@ -147,13 +160,53 @@ function TaskBar({ task, top, scale, window, onToggle, onRemove, onRequestDelete
   )
 }
 
+type MilestoneMarkProps = RowGeometry & {
+  task: Task
+  label: string
+  at: string
+  height: number
+}
+
+/** LP-3.13 / TW-3.9: a milestone, a clickable vertical line on its bar that opens the task. */
+function MilestoneMark({ task, label, at, top, height, scale, window }: MilestoneMarkProps) {
+  const { openTaskWindow } = useTaskWindowActions()
+  const time = new Date(at)
+  if (time < window.start || time > window.end) return null
+  const x = scale(time)
+  const open = () => openTaskWindow({ mode: 'edit', kind: 'task', taskId: task.id })
+  return (
+    <g
+      role="button"
+      tabIndex={0}
+      aria-haspopup="dialog"
+      aria-label={`Milestone ${label} on ${task.title}`}
+      onClick={open}
+      onKeyDown={activateOnKey(open)}
+      className={cx('group', focusableSvg)}
+    >
+      <title>{label}</title>
+      {/* A wider transparent hit area keeps the 2px line easy to click. */}
+      <rect x={x - 5} y={top} width={10} height={height} className="fill-transparent" />
+      <line
+        x1={x}
+        x2={x}
+        y1={top}
+        y2={top + height}
+        strokeWidth={2}
+        className="pointer-events-none stroke-milestone group-focus-visible:stroke-focus-ring-inverse group-focus-visible:[stroke-width:4]"
+      />
+    </g>
+  )
+}
+
 type PhaseStripProps = RowGeometry & {
+  task: Task
   phases: Phase[]
   taskTitle: string
   onOpenPhase: OpenPhaseHandler
 }
 
-function PhaseStrip({ phases, taskTitle, top, scale, window, onOpenPhase }: PhaseStripProps) {
+function PhaseStrip({ task, phases, taskTitle, top, scale, window, onOpenPhase }: PhaseStripProps) {
   // TODO(OQ-1): the green tick, white tick, and white end cap markers on phase
   // strips are undecided (specs/briefs/00-README.md). Render them here once defined.
   return (
@@ -175,11 +228,8 @@ function PhaseStrip({ phases, taskTitle, top, scale, window, onOpenPhase }: Phas
             // 1px gap keeps adjacent phases individually visible and clickable.
             width={Math.max(1, x1 - x0 - 1)}
             height={TIMELINE.phaseHeight}
-            onClick={(e) => onOpenPhase(phase, taskTitle, e.currentTarget)}
-            onKeyDown={(e) => {
-              const trigger = e.currentTarget
-              activateOnKey(() => onOpenPhase(phase, taskTitle, trigger))(e)
-            }}
+            onClick={() => onOpenPhase(task, phase)}
+            onKeyDown={activateOnKey(() => onOpenPhase(task, phase))}
             className={cx(
               'fill-phase hover:brightness-150',
               'focus-visible:stroke-focus-ring-inverse focus-visible:[stroke-width:3]',

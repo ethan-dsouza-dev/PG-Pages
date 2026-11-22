@@ -101,6 +101,15 @@
   --color-task-done: var(--palette-green-500);
   --color-task-done-outline: var(--palette-yellow-500);
   --color-phase: var(--palette-brown-900);
+  /* Subphase sections in the task window's bar preview (TW-4.2), cycled in order. */
+  --color-subphase-1: var(--palette-rust-600);
+  --color-subphase-2: var(--palette-teal-500);
+  --color-subphase-3: var(--palette-olive-700);
+  --color-subphase-4: var(--palette-tan-400);
+  --color-subphase-5: var(--palette-brown-900);
+  --color-subphase-6: var(--palette-rose-300);
+  /* Milestone lines (TW-3.9, LP-3.13). */
+  --color-milestone: var(--palette-ink-900);
   --color-now: var(--palette-red-600);
 
   /* Goals and actions */

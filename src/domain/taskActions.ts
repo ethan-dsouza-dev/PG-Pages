@@ -1,3 +1,4 @@
+import { pruneBoards } from './boardTasks'
 import type { PGPage, Task } from './types'
 
 /*
@@ -34,5 +35,6 @@ export function unscheduleTask(page: PGPage, taskId: string, now: Date): PGPage 
 /** LP-6.10 Delete: removes a task from the page data for good. */
 export function deleteTask(page: PGPage, taskId: string): PGPage {
   if (!page.tasks.some((t) => t.id === taskId)) return page
-  return { ...page, tasks: page.tasks.filter((t) => t.id !== taskId) }
+  // The folder entry goes too once the last occurrence of its task is gone.
+  return pruneBoards({ ...page, tasks: page.tasks.filter((t) => t.id !== taskId) })
 }

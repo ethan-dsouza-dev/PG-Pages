@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { AuthGate } from './features/auth'
 import { PageStack } from './features/page-stack/PageStack'
+import { TaskWindowHost } from './features/task-window/TaskWindowHost'
 
 const PrimitivesPreview = import.meta.env.DEV ? lazy(() => import('./dev/PrimitivesPreview')) : null
 const GalleryPreview = import.meta.env.DEV ? lazy(() => import('./dev/GalleryPreview')) : null
@@ -34,6 +35,7 @@ function App() {
   return (
     <AuthGate>
       <PageStack />
+      <TaskWindowHost />
     </AuthGate>
   )
 }

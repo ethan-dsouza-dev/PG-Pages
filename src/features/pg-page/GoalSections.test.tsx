@@ -24,7 +24,7 @@ describe('GoalSections', () => {
     expect(within(themes).getAllByRole('listitem')).toHaveLength(2)
 
     const lastDayItem = within(day).getAllByRole('listitem').at(-1)!
-    expect(within(lastDayItem).getByRole('button')).toHaveAccessibleName('Add day goal, coming soon')
+    expect(within(lastDayItem).getByRole('button')).toHaveAccessibleName('Add day goal')
   })
 
   it('toggles a chip between to do and done', async () => {

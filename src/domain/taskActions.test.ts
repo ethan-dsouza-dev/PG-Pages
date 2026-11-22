@@ -7,6 +7,7 @@ const now = new Date('2026-11-20T12:00:00Z')
 const task = (id: string, end: string, extra: Partial<Task> = {}): Task => ({
   id,
   title: id,
+  categoryId: 'productivity',
   start: '2026-11-20T08:00:00Z',
   end,
   timeZone: 'UTC',
@@ -26,6 +27,7 @@ const page: PGPage = {
   timeZone: 'UTC',
   goals: [],
   tasks: [upcoming, past, removed],
+  boards: [],
   resetTime: '00:00',
   lastResetAt: '2026-11-20T00:00:00.000Z',
 }

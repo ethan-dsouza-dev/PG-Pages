@@ -1,3 +1,4 @@
+import { emptyBoards } from './boardTasks'
 import type { PGPage } from './types'
 
 /*
@@ -56,6 +57,7 @@ export function addEmptyPage(c: PageCollection, id: string): PageCollection {
     lastResetAt: from.lastResetAt,
     goals: [],
     tasks: [],
+    boards: emptyBoards(id),
   }
   return { pages: [...c.pages, page], activePageId: id }
 }

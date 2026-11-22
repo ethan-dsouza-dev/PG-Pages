@@ -1,15 +1,18 @@
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { MOCK_ADS } from '../data/mock/ads'
-import { MOCK_BOARD_ITEMS, MOCK_BOARDS, MOCK_CATEGORIES } from '../data/mock/boards'
+import { MOCK_CATEGORIES } from '../data/mock/boards'
 import { createMockPage } from '../data/mock/pgPage'
 import { changeWallAd, GALLERY_AD_COUNT, pickAds } from '../domain/ads'
-import * as boards from '../domain/boards'
+import { representativeTask, taskKey, tasksForKey } from '../domain/boardTasks'
 import * as dailyReset from '../domain/dailyReset'
 import * as dayActions from '../domain/dayActions'
 import * as pages from '../domain/pages'
 import * as taskActions from '../domain/taskActions'
-import type { Ad, Board, BoardItem, Category, CategoryId, Goal, GoalScope, PGPage, Task } from '../domain/types'
+import type { ItemForm, Prefill } from '../domain/taskForm'
+import * as taskSave from '../domain/taskSave'
+import { calendarDate } from '../domain/todaySplit'
+import type { Ad, Board, Category, CategoryId, Goal, GoalScope, PGPage, Task } from '../domain/types'
 
 /** Holds every PG Page; the selector hooks below read the active one. */
 type PGPageState = pages.PageCollection & {
@@ -20,9 +23,6 @@ type PGPageState = pages.PageCollection & {
    * except for slots the user swaps with `changeGalleryAd`.
    */
   galleryAds: Ad[]
-  /** Category boards below the gallery, in page order (fixed: LP-7.1, OQ-18). */
-  boards: Board[]
-  boardItems: Record<string, BoardItem>
   categories: Record<CategoryId, Category>
   /** LP-3.7 "Show 24 hours". Store-only: resets on reload in this phase. */
   showFullDay: boolean
@@ -39,8 +39,29 @@ type PGPageState = pages.PageCollection & {
   unscheduleTask: (taskId: string, now?: Date) => void
   /** LP-6.10: permanently removes a task from the page. */
   deleteTask: (taskId: string) => void
-  /** Flips a board item todo ↔ done. Inactive items are ignored (OQ-16). */
-  toggleBoardItem: (itemId: string) => void
+  /**
+   * Flips the task a board chip stands for (its occurrence today, else the
+   * next one) todo ↔ done. Inactive tasks are ignored (OQ-16).
+   */
+  toggleBoardItem: (key: string, now?: Date) => void
+  /** Deletes every occurrence listed under a board chip. */
+  deleteSeries: (key: string) => void
+  /** The New / Edit Task window (TW-1). Null while closed. */
+  taskWindow: TaskWindowRequest | null
+  openTaskWindow: (request: TaskWindowRequest) => void
+  closeTaskWindow: () => void
+  /** Create an instance / list instances (TW-6.1, TW-6.2). Null while closed. */
+  instanceDialog: InstanceDialogRequest | null
+  openInstanceDialog: (request: InstanceDialogRequest) => void
+  closeInstanceDialog: () => void
+  /** Saves a New or Duplicate form; returns the new item's id. */
+  createItem: (form: ItemForm, now?: Date) => string
+  /** Saves an Edit form onto a task (TW-6.4 `scope`). */
+  updateTask: (taskId: string, form: ItemForm, scope: taskSave.EditScope, now?: Date) => void
+  /** Saves an Edit form onto a goal or theme. */
+  updateGoal: (goalId: string, form: ItemForm) => void
+  deleteGoal: (goalId: string) => void
+  createInstance: (taskId: string, start: string, end: string, now?: Date) => void
   /**
    * Swaps the ad in gallery slot `slot` for one from the pool not already on
    * the wall (LP-8.2). In memory only for now; LP-8.2 saves it per user.
@@ -54,6 +75,19 @@ type PGPageState = pages.PageCollection & {
   switchPage: (pageId: string) => void
 }
 
+/** What the New / Edit Task window was opened for (TW-1.2). */
+export type TaskWindowRequest =
+  | { mode: 'new'; prefill: Prefill }
+  /** `phasePath` opens the window slid to that subphase (TW-1.4). */
+  | { mode: 'edit'; kind: 'task'; taskId: string; phasePath?: string[] }
+  | { mode: 'edit'; kind: 'goal'; goalId: string }
+  | { mode: 'duplicate'; kind: 'task'; taskId: string }
+  | { mode: 'duplicate'; kind: 'goal'; goalId: string }
+  /** Edits one occurrence only (TW-6.3). */
+  | { mode: 'instance'; taskId: string }
+
+export type InstanceDialogRequest = { taskId: string; view: 'create' | 'list' }
+
 // Static UI phase: the page always comes from mock data (README rule 1).
 export const usePGPageStore = create<PGPageState>()((set) => {
   /** Runs a page reducer on the active page only. */
@@ -64,8 +98,6 @@ export const usePGPageStore = create<PGPageState>()((set) => {
     ...pages.collectionOf(createMockPage()),
     adPool: MOCK_ADS,
     galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
-    boards: MOCK_BOARDS,
-    boardItems: MOCK_BOARD_ITEMS,
     categories: MOCK_CATEGORIES,
     showFullDay: false,
     setShowFullDay: (showFullDay) => set({ showFullDay }),
@@ -87,7 +119,33 @@ export const usePGPageStore = create<PGPageState>()((set) => {
       }),
     unscheduleTask: (taskId, now = new Date()) => onActive((p) => taskActions.unscheduleTask(p, taskId, now)),
     deleteTask: (taskId) => onActive((p) => taskActions.deleteTask(p, taskId)),
-    toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
+    toggleBoardItem: (key, now = new Date()) =>
+      onActive((p) => {
+        const rep = representativeTask(tasksForKey(p.tasks, key), calendarDate(now, p.timeZone), p.timeZone)
+        return rep && !rep.inactive ? dayActions.toggleTask(p, rep.id) : p
+      }),
+    deleteSeries: (key) => onActive((p) => taskSave.deleteSeries(p, key)),
+    taskWindow: null,
+    openTaskWindow: (request) => set({ taskWindow: request }),
+    closeTaskWindow: () => set({ taskWindow: null }),
+    instanceDialog: null,
+    openInstanceDialog: (request) => set({ instanceDialog: request }),
+    closeInstanceDialog: () => set({ instanceDialog: null }),
+    createItem: (form, now = new Date()) => {
+      let id = ''
+      onActive((p) => {
+        const saved = taskSave.createFromForm(p, form, { now })
+        id = saved.id
+        return saved.page
+      })
+      return id
+    },
+    updateTask: (taskId, form, scope, now = new Date()) =>
+      onActive((p) => taskSave.updateTaskFromForm(p, taskId, form, scope, { now })),
+    updateGoal: (goalId, form) => onActive((p) => taskSave.updateGoalFromForm(p, goalId, form)),
+    deleteGoal: (goalId) => onActive((p) => taskSave.deleteGoal(p, goalId)),
+    createInstance: (taskId, start, end, now = new Date()) =>
+      onActive((p) => taskSave.createInstance(p, taskId, start, end, { now })),
     // TODO(LP-8.2): save the swap per user once persistence exists.
     changeGalleryAd: (slot) => set((s) => ({ galleryAds: changeWallAd(s.adPool, s.galleryAds, slot) })),
     renamePage: (name) => onActive((p) => pages.renamePage(p, name)),
@@ -106,6 +164,31 @@ const active = (s: PGPageState): PGPage => pages.activePage(s)
 
 export function useGoals(scope: GoalScope): Goal[] {
   return usePGPageStore(useShallow((s) => active(s).goals.filter((g) => g.scope === scope)))
+}
+
+/** Every goal and theme on the page. */
+export function useAllGoals(): Goal[] {
+  return usePGPageStore((s) => active(s).goals)
+}
+
+export function useTask(taskId: string): Task | undefined {
+  return usePGPageStore((s) => active(s).tasks.find((t) => t.id === taskId))
+}
+
+/** Every occurrence stored under the same key as `taskId`, earliest first. */
+export function useSeriesOf(taskId: string): Task[] {
+  return usePGPageStore(
+    useShallow((s) => {
+      const tasks = active(s).tasks
+      const task = tasks.find((t) => t.id === taskId)
+      return task ? tasksForKey(tasks, taskKey(task)) : []
+    }),
+  )
+}
+
+/** The active page, for the task window's lookups. */
+export function useActivePage(): PGPage {
+  return usePGPageStore(active)
 }
 
 export function useTasks(): Task[] {
@@ -183,17 +266,13 @@ export function useShowFullDay(): [boolean, (showFullDay: boolean) => void] {
 
 /* ---------- Boards slice ---------- */
 
+/** The active page's boards (folders), in page order. */
 export function useBoards(): Board[] {
-  return usePGPageStore((s) => s.boards)
+  return usePGPageStore((s) => active(s).boards)
 }
 
 export function useBoard(boardId: string): Board | undefined {
-  return usePGPageStore((s) => s.boards.find((b) => b.id === boardId))
-}
-
-/** Every board item by id. Toggling keeps untouched items by reference. */
-export function useBoardItems(): Record<string, BoardItem> {
-  return usePGPageStore((s) => s.boardItems)
+  return usePGPageStore((s) => active(s).boards.find((b) => b.id === boardId))
 }
 
 export function useCategories(): Record<CategoryId, Category> {
@@ -205,5 +284,31 @@ export function useCategory(categoryId: CategoryId): Category | undefined {
 }
 
 export function useBoardActions() {
-  return usePGPageStore(useShallow((s) => ({ toggleBoardItem: s.toggleBoardItem })))
+  return usePGPageStore(useShallow((s) => ({ toggleBoardItem: s.toggleBoardItem, deleteSeries: s.deleteSeries })))
+}
+
+/* ---------- Task window ---------- */
+
+export function useTaskWindowRequest(): TaskWindowRequest | null {
+  return usePGPageStore((s) => s.taskWindow)
+}
+
+export function useInstanceDialogRequest(): InstanceDialogRequest | null {
+  return usePGPageStore((s) => s.instanceDialog)
+}
+
+export function useTaskWindowActions() {
+  return usePGPageStore(
+    useShallow((s) => ({
+      openTaskWindow: s.openTaskWindow,
+      closeTaskWindow: s.closeTaskWindow,
+      openInstanceDialog: s.openInstanceDialog,
+      closeInstanceDialog: s.closeInstanceDialog,
+      createItem: s.createItem,
+      updateTask: s.updateTask,
+      updateGoal: s.updateGoal,
+      deleteGoal: s.deleteGoal,
+      createInstance: s.createInstance,
+    })),
+  )
 }
