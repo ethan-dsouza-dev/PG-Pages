@@ -1,11 +1,13 @@
-import { useId, type KeyboardEvent } from 'react'
+import { useId, useRef, type KeyboardEvent } from 'react'
 import { clampToWindow, type TimelineWindow } from '../../domain/timeline'
 import { describeSpan } from '../../domain/timelineFormat'
 import type { Phase, Task } from '../../domain/types'
 import { usePGPageActions } from '../../store/pgPageStore'
 import { cx } from '../../ui'
 import { TIMELINE } from './layout'
-import type { OpenPhaseHandler, TimeScale } from './types'
+import { focusTimelineScroller, isContextMenuKey, openContextMenuFromKeyboard } from './contextMenuKeys'
+import { TaskContextMenu } from './TaskContextMenu'
+import type { OpenPhaseHandler, RequestDeleteHandler, TimeScale } from './types'
 
 type RowGeometry = {
   top: number
@@ -17,6 +19,7 @@ type TaskRowProps = RowGeometry & {
   /** One task, or every instance of a repeating series. */
   tasks: Task[]
   onOpenPhase: OpenPhaseHandler
+  onRequestDelete: RequestDeleteHandler
 }
 
 /** Enter/Space activation for SVG elements acting as buttons. */
@@ -31,8 +34,8 @@ function activateOnKey(action: () => void) {
 
 const focusableSvg = 'cursor-pointer outline-none transition-[filter] motion-reduce:transition-none'
 
-export function TaskRow({ tasks, onOpenPhase, ...geometry }: TaskRowProps) {
-  const { toggleTask } = usePGPageActions()
+export function TaskRow({ tasks, onOpenPhase, onRequestDelete, ...geometry }: TaskRowProps) {
+  const { toggleTask, unscheduleTask } = usePGPageActions()
   return (
     <g>
       {tasks.map((task) => (
@@ -40,6 +43,8 @@ export function TaskRow({ tasks, onOpenPhase, ...geometry }: TaskRowProps) {
           key={task.id}
           task={task}
           onToggle={() => toggleTask(task.id)}
+          onRemove={() => unscheduleTask(task.id)}
+          onRequestDelete={onRequestDelete}
           onOpenPhase={onOpenPhase}
           {...geometry}
         />
@@ -51,11 +56,14 @@ export function TaskRow({ tasks, onOpenPhase, ...geometry }: TaskRowProps) {
 type TaskBarProps = RowGeometry & {
   task: Task
   onToggle: () => void
+  onRemove: () => void
+  onRequestDelete: RequestDeleteHandler
   onOpenPhase: OpenPhaseHandler
 }
 
-function TaskBar({ task, top, scale, window, onToggle, onOpenPhase }: TaskBarProps) {
+function TaskBar({ task, top, scale, window, onToggle, onRemove, onRequestDelete, onOpenPhase }: TaskBarProps) {
   const clipId = useId()
+  const barRef = useRef<SVGGElement>(null)
   const span = clampToWindow(task, window)
   if (!span) return null
 
@@ -70,42 +78,61 @@ function TaskBar({ task, top, scale, window, onToggle, onOpenPhase }: TaskBarPro
 
   return (
     <g>
-      <g
-        role="button"
-        tabIndex={0}
-        aria-pressed={task.completed}
-        aria-label={`${task.title}, ${describeSpan(task, window)}, ${status}`}
-        onClick={onToggle}
-        onKeyDown={activateOnKey(onToggle)}
-        className={cx('group hover:brightness-110', focusableSvg)}
+      <TaskContextMenu
+        task={task}
+        onRemove={() => {
+          // The bar leaves the timeline, so park focus on the scroller first.
+          focusTimelineScroller(barRef.current)
+          onRemove()
+        }}
+        onRequestDelete={() => barRef.current && onRequestDelete(task, barRef.current)}
       >
-        <clipPath id={clipId}>
-          <rect x={x0} y={top} width={x1 - x0} height={barHeight} />
-        </clipPath>
-        <rect
-          x={left}
-          y={top}
-          width={right - left}
-          height={barHeight}
-          rx={TIMELINE.barRadius}
-          strokeWidth={task.completed ? 1.5 : 0}
-          className={cx(
-            task.completed ? 'fill-task-done stroke-task-done-outline' : 'fill-task-todo',
-            'group-focus-visible:stroke-focus-ring-inverse group-focus-visible:[stroke-width:3]',
-          )}
-        />
-        <text
-          x={(x0 + x1) / 2}
-          y={top + barHeight / 2}
-          textAnchor="middle"
-          dominantBaseline="central"
-          clipPath={`url(#${clipId})`}
-          aria-hidden="true"
-          className="pointer-events-none fill-text-on-accent font-body text-label font-medium"
+        <g
+          ref={barRef}
+          role="button"
+          tabIndex={0}
+          aria-pressed={task.completed}
+          aria-keyshortcuts="Shift+F10"
+          aria-label={`${task.title}, ${describeSpan(task, window)}, ${status}`}
+          onClick={onToggle}
+          onKeyDown={(event) => {
+            if (isContextMenuKey(event)) {
+              event.preventDefault()
+              openContextMenuFromKeyboard(event.currentTarget)
+              return
+            }
+            activateOnKey(onToggle)(event)
+          }}
+          className={cx('group hover:brightness-110', focusableSvg)}
         >
-          {task.title}
-        </text>
-      </g>
+          <clipPath id={clipId}>
+            <rect x={x0} y={top} width={x1 - x0} height={barHeight} />
+          </clipPath>
+          <rect
+            x={left}
+            y={top}
+            width={right - left}
+            height={barHeight}
+            rx={TIMELINE.barRadius}
+            strokeWidth={task.completed ? 1.5 : 0}
+            className={cx(
+              task.completed ? 'fill-task-done stroke-task-done-outline' : 'fill-task-todo',
+              'group-focus-visible:stroke-focus-ring-inverse group-focus-visible:[stroke-width:3]',
+            )}
+          />
+          <text
+            x={(x0 + x1) / 2}
+            y={top + barHeight / 2}
+            textAnchor="middle"
+            dominantBaseline="central"
+            clipPath={`url(#${clipId})`}
+            aria-hidden="true"
+            className="pointer-events-none fill-text-on-accent font-body text-label font-medium"
+          >
+            {task.title}
+          </text>
+        </g>
+      </TaskContextMenu>
       {phases.length > 0 && (
         <PhaseStrip
           phases={phases}
