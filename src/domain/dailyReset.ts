@@ -5,8 +5,8 @@ import type { Goal, PGPage } from './types'
 
 /*
  * LP-5.2 / LP-5.3: every PG Page has a local reset time (default 12:00 am).
- * Each time the page's wall clock passes it, daily tasks, goals and themes go
- * back to unchecked. All time math runs in the page's IANA time zone.
+ * Each time the page's wall clock passes it, Done tasks, day goals and themes go
+ * back to unchecked; month goals do so only at the first reset of a new month. All time math runs in the page's IANA time zone.
  */
 
 /** Wall-clock time of day as "HH:mm" (24h), the format of `<input type="time">`. */
@@ -101,20 +101,53 @@ export function isResetDue(
 }
 
 /**
- * The automatic daily reset: what Reset Day clears for the day of `now`, plus
- * every goal and theme (all are checkable daily). Manual Reset Day is
- * unchanged. Records `now` as `lastResetAt`.
+ * The reset boundary on the 1st of the page-local month containing `now`
+ * (`monthOffset` months from it). Same wall-time rules as the daily boundary.
+ */
+function monthBoundary(now: Date, monthOffset: number, resetTime: ResetTime, timeZone: string): Date {
+  const local = new TZDate(now, timeZone)
+  return resetInstantOn(local.getFullYear(), local.getMonth() + monthOffset, 1, resetTime, timeZone)
+}
+
+/** The most recent month-start reset boundary (reset time on the 1st) at or before `now`. */
+export function latestMonthResetBoundary(now: Date, resetTime: ResetTime, timeZone: string): Date {
+  const thisMonths = monthBoundary(now, 0, resetTime, timeZone)
+  return thisMonths <= now ? thisMonths : monthBoundary(now, -1, resetTime, timeZone)
+}
+
+/**
+ * Has a new month started (at the reset time on the 1st) since the last reset?
+ * A reset missed across the month change (page closed over the 1st) still
+ * counts, so month goals catch up on the next reset.
+ */
+export function isMonthResetDue(
+  lastResetAt: string,
+  now: Date,
+  resetTime: ResetTime,
+  timeZone: string,
+): boolean {
+  return new Date(lastResetAt) < latestMonthResetBoundary(now, resetTime, timeZone)
+}
+
+/**
+ * The automatic reset (LP-5.3): what Reset Day clears (Done tasks of the day
+ * of `now`, day goals, themes), plus month goals when a new month started
+ * since `page.lastResetAt`. Done → Unchecked only. Records `now` as
+ * `lastResetAt`.
  */
 export function applyDailyReset(page: PGPage, now: Date): PGPage {
   const dayReset = resetDay(page, now)
-  const anyGoalDone = dayReset.goals.some((g) => g.completed)
-  const goals = anyGoalDone
-    ? dayReset.goals.map((g: Goal) => (g.completed ? { ...g, completed: false } : g))
-    : dayReset.goals
+  const newMonth = isMonthResetDue(page.lastResetAt, now, page.resetTime, page.timeZone)
+  const goals =
+    newMonth && dayReset.goals.some((g) => g.scope === 'month' && g.completed)
+      ? dayReset.goals.map((g: Goal) =>
+          g.scope === 'month' && g.completed ? { ...g, completed: false } : g,
+        )
+      : dayReset.goals
   return { ...dayReset, goals, lastResetAt: now.toISOString() }
 }
 
-/** Runs the daily reset if a boundary has passed since the last one, else returns `page`. */
+/** Runs the reset if a daily boundary has passed since the last one, else returns `page`. */
 export function applyDailyResetIfDue(page: PGPage, now: Date): PGPage {
   return isResetDue(page.lastResetAt, now, page.resetTime, page.timeZone)
     ? applyDailyReset(page, now)
@@ -124,14 +157,16 @@ export function applyDailyResetIfDue(page: PGPage, now: Date): PGPage {
 /**
  * Changes the reset time without firing retroactively: a boundary of the new
  * time that already passed today doesn't wipe the user's progress. The next
- * reset is the new time's next occurrence.
+ * reset is the new time's next occurrence. A reset that was already due under
+ * the old time runs first, so moving the time can't skip a day or a month.
  */
 export function changeResetTime(page: PGPage, resetTime: ResetTime, now: Date): PGPage {
   if (resetTime === page.resetTime) return page
-  const passed = latestResetBoundary(now, resetTime, page.timeZone)
+  const current = applyDailyResetIfDue(page, now)
+  const passed = latestResetBoundary(now, resetTime, current.timeZone)
   const lastResetAt =
-    new Date(page.lastResetAt) < passed ? passed.toISOString() : page.lastResetAt
-  return { ...page, resetTime, lastResetAt }
+    new Date(current.lastResetAt) < passed ? passed.toISOString() : current.lastResetAt
+  return { ...current, resetTime, lastResetAt }
 }
 
 /** "00:00" → "12:00 am", "13:05" → "1:05 pm". */

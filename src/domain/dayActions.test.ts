@@ -72,15 +72,17 @@ describe('checkAll', () => {
 })
 
 describe('resetDay', () => {
-  it("un-completes day goals and today's tasks only", () => {
-    const after = resetDay(checkAll(page(), TODAY), TODAY)
+  it("un-completes day goals, themes and today's tasks only (LP-5.1)", () => {
+    const withThemeDone = toggleGoal(checkAll(page(), TODAY), 'theme-1')
+    const after = resetDay(withThemeDone, TODAY)
     expect(completedIds(after.goals)).toEqual([])
     expect(completedIds(after.tasks)).toEqual(['tomorrow'])
   })
 
-  it('does not touch completed month goals', () => {
-    const withMonthDone = toggleGoal(page(), 'month-1')
-    const after = resetDay(withMonthDone, TODAY)
+  it('does not touch completed month goals (they reset monthly)', () => {
+    const before = toggleGoal(page(), 'month-1')
+    const after = resetDay(before, TODAY)
     expect(completedIds(after.goals)).toEqual(['month-1'])
+    expect(after.goals[2]).toBe(before.goals[2])
   })
 })

@@ -67,7 +67,7 @@ function ResetTimeForm({ resetTime, onCancel, onSave }: ResetTimeFormProps) {
       <div>
         <Dialog.Title className="text-section">Change reset time</Dialog.Title>
         <Dialog.Description className="text-meta">
-          Every day at this time, daily tasks, goals and themes return to unchecked. Currently{' '}
+          Every day at this time, tasks, day goals and themes return to unchecked. Month goals reset at this time on the 1st. Currently{' '}
           {formatResetTime(resetTime)}.
         </Dialog.Description>
       </div>

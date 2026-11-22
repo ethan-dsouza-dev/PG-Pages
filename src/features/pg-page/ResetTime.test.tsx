@@ -74,14 +74,23 @@ describe('useDailyReset (LP-5.3)', () => {
     renderHook(() => useDailyReset(30_000))
     expect(completed()).toEqual(['day-read', 'month-gym'])
 
-    act(() => vi.advanceTimersByTime(60_000)) // past 00:00 UTC
-    expect(completed()).toEqual([])
+    act(() => vi.advanceTimersByTime(60_000)) // past 00:00 UTC, mid-month
+    expect(completed()).toEqual(['month-gym'])
     const resetAt = usePGPageStore.getState().page.lastResetAt
     expect(new Date(resetAt) >= new Date('2026-10-11T00:00:00Z')).toBe(true)
 
     act(() => usePGPageStore.getState().toggleGoal('theme-discipline'))
     act(() => vi.advanceTimersByTime(60 * 60_000))
-    expect(completed()).toEqual(['theme-discipline'])
+    expect(completed()).toEqual(['month-gym', 'theme-discipline'])
     expect(usePGPageStore.getState().page.lastResetAt).toBe(resetAt)
+  })
+
+  it('also resets month goals at the first reset of a new month', () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    vi.setSystemTime(new Date('2026-10-31T23:59:00Z'))
+    usePGPageStore.setState({ page: createMockPage(new Date(), 'UTC') })
+    renderHook(() => useDailyReset(30_000))
+    act(() => vi.advanceTimersByTime(60_000)) // past 00:00 UTC on Nov 1
+    expect(usePGPageStore.getState().page.goals.some((g) => g.completed)).toBe(false)
   })
 })

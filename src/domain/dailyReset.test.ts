@@ -4,8 +4,10 @@ import {
   applyDailyResetIfDue,
   changeResetTime,
   formatResetTime,
+  isMonthResetDue,
   isResetDue,
   isResetTime,
+  latestMonthResetBoundary,
   latestResetBoundary,
   nextResetBoundary,
 } from './dailyReset'
@@ -135,11 +137,64 @@ function page(overrides: Partial<PGPage> = {}): PGPage {
 describe('applyDailyReset', () => {
   const now = new Date('2026-10-11T00:00:30Z')
 
-  it("unchecks every goal and theme plus the day's tasks, and records the reset", () => {
-    const after = applyDailyReset(page(), now)
-    expect(after.goals.every((g) => !g.completed)).toBe(true)
+  const doneIds = (p: PGPage) => p.goals.filter((g) => g.completed).map((g) => g.id)
+
+  it("mid-month: unchecks day goals, themes and the day's tasks, not month goals", () => {
+    const before = page()
+    const after = applyDailyReset(before, now)
+    expect(doneIds(after)).toEqual(['month-1'])
+    expect(after.goals[1]).toBe(before.goals[1])
     expect(after.tasks.map((t) => t.completed)).toEqual([false, true])
     expect(after.lastResetAt).toBe(iso(now))
+  })
+
+  it('first reset of a new month also unchecks month goals', () => {
+    const p = page({ lastResetAt: '2026-10-31T00:00:00.000Z' })
+    expect(doneIds(applyDailyReset(p, new Date('2026-11-01T00:00:30Z')))).toEqual([])
+  })
+
+  it('catches up month goals after a reset missed across the month change', () => {
+    // Last reset Oct 30; page closed until Nov 3.
+    const p = page({ lastResetAt: '2026-10-30T00:00:00.000Z' })
+    const after = applyDailyResetIfDue(p, new Date('2026-11-03T15:00:00Z'))
+    expect(doneIds(after)).toEqual([])
+    // The next daily reset that month leaves month goals alone again.
+    const rechecked = { ...after, goals: after.goals.map((g) => ({ ...g, completed: true })) }
+    expect(doneIds(applyDailyResetIfDue(rechecked, new Date('2026-11-04T00:00:00Z')))).toEqual(['month-1'])
+  })
+})
+
+describe('month boundaries', () => {
+  it('is the reset time on the 1st, in the page time zone', () => {
+    expect(iso(latestMonthResetBoundary(new Date('2026-11-20T12:00:00Z'), '09:00', 'UTC'))).toBe(
+      '2026-11-01T09:00:00.000Z',
+    )
+    // Before 09:00 on the 1st, the latest month boundary is still last month's.
+    expect(iso(latestMonthResetBoundary(new Date('2026-11-01T08:59:00Z'), '09:00', 'UTC'))).toBe(
+      '2026-10-01T09:00:00.000Z',
+    )
+    // January rolls back to December of the previous year.
+    expect(iso(latestMonthResetBoundary(new Date('2027-01-01T00:30:00Z'), '01:00', 'UTC'))).toBe(
+      '2026-12-01T01:00:00.000Z',
+    )
+    // Midnight on Nov 1 in Kolkata is Oct 31 18:30Z.
+    expect(isMonthResetDue('2026-10-31T00:00:00.000Z', new Date('2026-10-31T18:30:00Z'), '00:00', 'Asia/Kolkata')).toBe(
+      true,
+    )
+  })
+
+  it('is DST-safe: New York falls back on Nov 1, 2026', () => {
+    const tz = 'America/New_York'
+    // 00:00 on Nov 1 is still EDT (04:00Z); 01:30 resolves to its first (EDT) occurrence.
+    expect(iso(latestMonthResetBoundary(new Date('2026-11-01T12:00:00Z'), '00:00', tz))).toBe(
+      '2026-11-01T04:00:00.000Z',
+    )
+    expect(iso(latestMonthResetBoundary(new Date('2026-11-01T12:00:00Z'), '01:30', tz))).toBe(
+      '2026-11-01T05:30:00.000Z',
+    )
+    // Dec 1 midnight is EST (05:00Z).
+    expect(isMonthResetDue('2026-11-30T05:00:00.000Z', new Date('2026-12-01T04:59:00Z'), '00:00', tz)).toBe(false)
+    expect(isMonthResetDue('2026-11-30T05:00:00.000Z', new Date('2026-12-01T05:00:00Z'), '00:00', tz)).toBe(true)
   })
 })
 
@@ -151,7 +206,8 @@ describe('applyDailyResetIfDue', () => {
 
   it('resets once the boundary passes, then not again until the next one', () => {
     const once = applyDailyResetIfDue(page(), new Date('2026-10-11T00:01:00Z'))
-    expect(once.goals.some((g) => g.completed)).toBe(false)
+    // Mid-month: only the month goal stays done.
+    expect(once.goals.filter((g) => g.completed).map((g) => g.id)).toEqual(['month-1'])
     const rechecked = { ...once, goals: once.goals.map((g) => ({ ...g, completed: true })) }
     expect(applyDailyResetIfDue(rechecked, new Date('2026-10-11T23:59:00Z'))).toBe(rechecked)
   })
@@ -170,6 +226,12 @@ describe('changeResetTime', () => {
   it('fires at a later time today', () => {
     const changed = changeResetTime(page(), '22:00', now)
     expect(isResetDue(changed.lastResetAt, new Date('2026-10-10T22:00:00Z'), '22:00', 'UTC')).toBe(true)
+  })
+
+  it('runs a reset already due under the old time before moving it', () => {
+    const due = page({ lastResetAt: '2026-09-30T00:00:00.000Z' })
+    const changed = changeResetTime(due, '23:00', now)
+    expect(changed.goals.every((g) => !g.completed)).toBe(true)
   })
 
   it('returns the same page when the time is unchanged', () => {

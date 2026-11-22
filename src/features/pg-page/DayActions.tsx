@@ -26,7 +26,7 @@ export function DayActions() {
           <TextLink
             onClick={() => {
               resetDay(new Date())
-              setAnnouncement("Today's tasks and day goals reset to to do")
+              setAnnouncement("Today's tasks, day goals and themes reset to to do")
             }}
           >
             Reset Day
