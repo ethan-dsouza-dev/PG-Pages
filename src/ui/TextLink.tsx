@@ -1,3 +1,4 @@
+import type { Ref } from 'react'
 import { cx } from './cx'
 import { ComingSoonHint } from './ComingSoonHint'
 import { logPlaceholder, placeholderAttrs } from './placeholder'
@@ -19,6 +20,8 @@ type TextLinkProps = Behavior & {
   children: string
   size?: TextLinkSize
   className?: string
+  /** Forwarded to the rendered <button> (ignored for links), e.g. to return focus to it. */
+  ref?: Ref<HTMLButtonElement>
 }
 
 const sizeClass: Record<TextLinkSize, string> = {
@@ -28,7 +31,7 @@ const sizeClass: Record<TextLinkSize, string> = {
 }
 
 /** Underlined text action. Renders <a> for `href`, otherwise a <button>. */
-export function TextLink({ children, size = 'nav', className, ...behavior }: TextLinkProps) {
+export function TextLink({ children, size = 'nav', className, ref, ...behavior }: TextLinkProps) {
   const classes = cx(
     'interactive inline-block text-left underline underline-offset-4 decoration-2',
     sizeClass[size],
@@ -54,6 +57,7 @@ export function TextLink({ children, size = 'nav', className, ...behavior }: Tex
   if (behavior.placeholder) {
     return (
       <button
+        ref={ref}
         type="button"
         className={classes}
         {...placeholderAttrs}
@@ -67,6 +71,7 @@ export function TextLink({ children, size = 'nav', className, ...behavior }: Tex
 
   return (
     <button
+      ref={ref}
       type="button"
       className={cx(classes, 'disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline')}
       onClick={behavior.onClick}

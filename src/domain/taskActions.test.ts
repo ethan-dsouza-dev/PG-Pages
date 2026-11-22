@@ -26,6 +26,8 @@ const page: PGPage = {
   timeZone: 'UTC',
   goals: [],
   tasks: [upcoming, past, removed],
+  resetTime: '00:00',
+  lastResetAt: '2026-11-20T00:00:00.000Z',
 }
 
 describe('isOnUpcomingSchedule', () => {

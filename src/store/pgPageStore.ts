@@ -5,6 +5,7 @@ import { MOCK_BOARD_ITEMS, MOCK_BOARDS, MOCK_CATEGORIES } from '../data/mock/boa
 import { createMockPage } from '../data/mock/pgPage'
 import { changeWallAd, GALLERY_AD_COUNT, pickAds } from '../domain/ads'
 import * as boards from '../domain/boards'
+import * as dailyReset from '../domain/dailyReset'
 import * as dayActions from '../domain/dayActions'
 import * as taskActions from '../domain/taskActions'
 import type { Ad, Board, BoardItem, Category, CategoryId, Goal, GoalScope, PGPage, Task } from '../domain/types'
@@ -26,6 +27,10 @@ type PGPageState = {
   toggleTask: (taskId: string) => void
   checkAll: (day: Date) => void
   resetDay: (day: Date) => void
+  /** LP-5.2: change the page's daily reset time ("HH:mm"). */
+  setResetTime: (resetTime: string, now: Date) => void
+  /** LP-5.3: run the automatic daily reset if the reset time passed since the last one. */
+  runDailyResetIfDue: (now: Date) => void
   /** LP-6.9: takes a task off the schedule as of `now`; it stays in the page. */
   unscheduleTask: (taskId: string, now?: Date) => void
   /** LP-6.10: permanently removes a task from the page. */
@@ -52,6 +57,12 @@ export const usePGPageStore = create<PGPageState>()((set) => ({
   toggleTask: (taskId) => set((s) => ({ page: dayActions.toggleTask(s.page, taskId) })),
   checkAll: (day) => set((s) => ({ page: dayActions.checkAll(s.page, day) })),
   resetDay: (day) => set((s) => ({ page: dayActions.resetDay(s.page, day) })),
+  setResetTime: (resetTime, now) => set((s) => ({ page: dailyReset.changeResetTime(s.page, resetTime, now) })),
+  runDailyResetIfDue: (now) =>
+    set((s) => {
+      const page = dailyReset.applyDailyResetIfDue(s.page, now)
+      return page === s.page ? s : { page }
+    }),
   unscheduleTask: (taskId, now = new Date()) =>
     set((s) => ({ page: taskActions.unscheduleTask(s.page, taskId, now) })),
   deleteTask: (taskId) => set((s) => ({ page: taskActions.deleteTask(s.page, taskId) })),
@@ -89,6 +100,10 @@ export function usePageMeta() {
   )
 }
 
+export function useResetTime(): string {
+  return usePGPageStore((s) => s.page.resetTime)
+}
+
 /** The ads hanging on the gallery wall for this page load. */
 export function useGalleryAds(): Ad[] {
   return usePGPageStore((s) => s.galleryAds)
@@ -113,6 +128,7 @@ export function usePGPageActions() {
       toggleTask: s.toggleTask,
       checkAll: s.checkAll,
       resetDay: s.resetDay,
+      setResetTime: s.setResetTime,
       unscheduleTask: s.unscheduleTask,
       deleteTask: s.deleteTask,
     })),

@@ -50,6 +50,10 @@ export type PGPage = {
   version: number
   /** IANA time zone that defines the page's day boundaries. */
   timeZone: string
+  /** Local "HH:mm" at which tasks, day goals and themes reset daily, month goals on the 1st (LP-5.2). Default "00:00". */
+  resetTime: string
+  /** ISO instant of the last automatic daily reset (LP-5.3). */
+  lastResetAt: string
   goals: Goal[]
   tasks: Task[]
 }
