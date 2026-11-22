@@ -1,5 +1,5 @@
 import { TextLink } from '../../ui'
-import type { DayIndex } from './layout'
+import { DAY_NAMES, type DayIndex } from './layout'
 
 /** Last / This / Next week. PLACEHOLDER(05): behavior is undecided (OQ-4). */
 export function WeekNav() {
@@ -17,8 +17,6 @@ export function WeekNav() {
     </div>
   )
 }
-
-export const DAY_NAMES = ['Yesterday', 'Today', 'Tomorrow'] as const
 
 type DayNavProps = {
   visibleDay: DayIndex

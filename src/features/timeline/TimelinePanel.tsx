@@ -7,20 +7,22 @@ import {
   isTimed,
 } from '../../domain/timeline'
 import { formatDayLabel } from '../../domain/timelineFormat'
-import { usePageMeta, useShowFullDay, useTasks } from '../../store/pgPageStore'
+import type { Task } from '../../domain/types'
+import { usePageMeta, usePGPageActions, useScheduledTasks, useShowFullDay } from '../../store/pgPageStore'
 import { AddChip, Panel } from '../../ui'
 import { AllDayPopover } from './AllDayPopover'
-import type { DayIndex } from './layout'
+import { DAY_NAMES, type DayIndex } from './layout'
+import { DeleteTaskDialog } from './DeleteTaskDialog'
 import { CurrentTimeText } from './NowIndicator'
 import { PhaseDetail, type OpenPhase } from './PhaseDetail'
-import { DAY_NAMES, DayNav, WeekNav } from './TimelineNav'
+import { DayNav, WeekNav } from './TimelineNav'
 import { TimelineScroller, type TimelineScrollerHandle } from './TimelineScroller'
-import type { OpenPhaseHandler } from './types'
+import type { OpenPhaseHandler, RequestDeleteHandler } from './types'
 
 /** Date label, week/day navigation, the scrollable timeline, and Add Timed Task. */
 export function TimelinePanel() {
   const { timeZone } = usePageMeta()
-  const tasks = useTasks()
+  const tasks = useScheduledTasks()
   // The window is anchored when the page loads.
   // TODO: roll the window over at midnight once real data is wired in.
   const [anchor] = useState(() => new Date())
@@ -35,10 +37,23 @@ export function TimelinePanel() {
   const [openPhase, setOpenPhase] = useState<OpenPhase | null>(null)
   const scrollerRef = useRef<TimelineScrollerHandle>(null)
   const phaseTriggerRef = useRef<SVGElement | null>(null)
+  const { deleteTask } = usePGPageActions()
+  const [pendingDelete, setPendingDelete] = useState<Task | null>(null)
+  const deleteTriggerRef = useRef<SVGElement | null>(null)
 
   const handleOpenPhase: OpenPhaseHandler = (phase, taskTitle, trigger) => {
     phaseTriggerRef.current = trigger
     setOpenPhase({ phase, taskTitle })
+  }
+
+  const handleRequestDelete: RequestDeleteHandler = (task, trigger) => {
+    deleteTriggerRef.current = trigger
+    setPendingDelete(task)
+  }
+
+  const proceedDelete = () => {
+    if (pendingDelete) deleteTask(pendingDelete.id)
+    setPendingDelete(null)
   }
 
   return (
@@ -76,6 +91,7 @@ export function TimelinePanel() {
           rows={rows}
           onVisibleDayChange={setVisibleDay}
           onOpenPhase={handleOpenPhase}
+          onRequestDelete={handleRequestDelete}
         />
         <div className="flex items-center justify-end gap-4">
           <span aria-hidden="true" className="text-label">
@@ -92,6 +108,18 @@ export function TimelinePanel() {
         onCloseAutoFocus={(event) => {
           event.preventDefault()
           phaseTriggerRef.current?.focus()
+        }}
+      />
+      <DeleteTaskDialog
+        task={pendingDelete}
+        onProceed={proceedDelete}
+        onCancel={() => setPendingDelete(null)}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          // After Proceed the bar is gone, so focus falls back to the scroller.
+          const trigger = deleteTriggerRef.current
+          if (trigger?.isConnected) trigger.focus()
+          else scrollerRef.current?.focus()
         }}
       />
     </section>

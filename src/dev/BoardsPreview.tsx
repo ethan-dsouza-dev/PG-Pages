@@ -2,8 +2,11 @@ import { useId, useState } from 'react'
 import { MOCK_BOARDS } from '../data/mock/boards'
 import { toggleBoardItem } from '../domain/boards'
 import type { Board as BoardData, BoardItem } from '../domain/types'
+import { calendarDate } from '../domain/todaySplit'
 import { Board } from '../features/category-board/Board'
 import { EDGE_BOARDS, MATRIX_BOARDS, PREVIEW_CATEGORIES, PREVIEW_ITEMS, THEME_SWAP_BOARD } from './boardVariants'
+
+const PREVIEW_TODAY = calendarDate(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone)
 
 type PreviewProps = {
   label: string
@@ -17,7 +20,7 @@ function PreviewBoard({ label, board, items, onToggleItem }: PreviewProps) {
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <p className="text-meta">{label}</p>
-      <Board board={board} categories={PREVIEW_CATEGORIES} items={items} onToggleItem={onToggleItem} headingId={headingId} />
+      <Board board={board} categories={PREVIEW_CATEGORIES} items={items} onToggleItem={onToggleItem} headingId={headingId} today={PREVIEW_TODAY} />
     </section>
   )
 }

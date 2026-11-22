@@ -3,7 +3,7 @@ import type { HourRange, Task } from '../../domain/types'
 import { rowTop, timelineHeight, TIMELINE } from './layout'
 import { NowIndicator } from './NowIndicator'
 import { TaskRow } from './TaskRow'
-import type { OpenPhaseHandler } from './types'
+import type { OpenPhaseHandler, RequestDeleteHandler } from './types'
 
 type TimelineSvgProps = {
   window: TimelineWindow
@@ -12,10 +12,11 @@ type TimelineSvgProps = {
   rows: Task[][]
   dayWidth: number
   onOpenPhase: OpenPhaseHandler
+  onRequestDelete: RequestDeleteHandler
 }
 
 /** Pure render of the 3-day timeline: (window, hours, rows, size) → SVG. */
-export function TimelineSvg({ window, hours, rows, dayWidth, onOpenPhase }: TimelineSvgProps) {
+export function TimelineSvg({ window, hours, rows, dayWidth, onOpenPhase, onRequestDelete }: TimelineSvgProps) {
   const width = dayWidth * 3
   const height = timelineHeight(rows.length)
   const scale = createTimeScale(window, hours, dayWidth)
@@ -48,6 +49,7 @@ export function TimelineSvg({ window, hours, rows, dayWidth, onOpenPhase }: Time
           scale={scale}
           window={window}
           onOpenPhase={onOpenPhase}
+          onRequestDelete={onRequestDelete}
         />
       ))}
       <NowIndicator scale={scale} window={window} hours={hours} height={height} />

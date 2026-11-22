@@ -72,6 +72,17 @@ describe('TextLink', () => {
     expect(screen.getByRole('link', { name: 'Other PG Pages' })).toHaveAttribute('href', '/somewhere')
   })
 
+  it('opens external links in a new tab without opener or referrer, and says so', () => {
+    render(
+      <TextLink href="https://example.com" external>
+        Visit site
+      </TextLink>,
+    )
+    const link = screen.getByRole('link', { name: 'Visit site, opens in a new tab' })
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
   it('renders a button when given onClick', async () => {
     const user = userEvent.setup()
     const onClick = vi.fn()
@@ -139,5 +150,17 @@ describe('SeeAllButton', () => {
     await user.click(button)
     expect(info).toHaveBeenCalledOnce()
     info.mockRestore()
+  })
+})
+
+describe('SeeAllButton with onClick', () => {
+  it('is a real button, not a placeholder', async () => {
+    const user = userEvent.setup()
+    const onClick = vi.fn()
+    render(<SeeAllButton count={22} label="See all 22 items" onClick={onClick} />)
+    const button = screen.getByRole('button', { name: 'See all 22 items' })
+    expect(button).not.toHaveAttribute('aria-disabled')
+    await user.click(button)
+    expect(onClick).toHaveBeenCalledOnce()
   })
 })

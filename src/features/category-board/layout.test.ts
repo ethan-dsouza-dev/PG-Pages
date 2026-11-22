@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { boardColumns, groupItemRows, laneBandColumn, primaryCell } from './layout'
+import { bandRows, boardColumns, groupItemRows, laneBandColumn, primaryCell } from './layout'
 
 describe('boardColumns', () => {
   it.each([0, 1, 2])('builds a valid template for %i lanes', (lanes) => {
@@ -35,5 +35,14 @@ describe('primaryCell and groupItemRows', () => {
     expect(groupItemRows(9, [6])).toBe(6)
     expect(groupItemRows(0, [])).toBe(1)
     expect(groupItemRows(0, [4])).toBe(4)
+  })
+})
+
+describe('bandRows', () => {
+  it('fits 2 primary items per row and 1 lane item per row, at least one row', () => {
+    expect(bandRows(0, [])).toBe(1)
+    expect(bandRows(3, [])).toBe(2)
+    expect(bandRows(4, [5])).toBe(5)
+    expect(bandRows(9, [2, 1])).toBe(5)
   })
 })

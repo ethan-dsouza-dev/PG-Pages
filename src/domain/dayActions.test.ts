@@ -16,9 +16,11 @@ function page(): PGPage {
   return {
     id: 'p',
     ownerName: 'Jake',
-    title: "Jake's First PG Page",
+    name: "Jake's First",
     version: 1,
     timeZone: 'UTC',
+    resetTime: '00:00',
+    lastResetAt: '2026-10-10T00:00:00.000Z',
     goals: [goal('day-1', 'day'), goal('day-2', 'day', true), goal('month-1', 'month'), goal('theme-1', 'theme')],
     tasks: [
       task('today', '2026-10-10T09:00:00Z', '2026-10-10T10:00:00Z'),
@@ -70,15 +72,27 @@ describe('checkAll', () => {
 })
 
 describe('resetDay', () => {
-  it("un-completes day goals and today's tasks only", () => {
-    const after = resetDay(checkAll(page(), TODAY), TODAY)
+  it("un-completes day goals, themes and today's tasks only (LP-5.1)", () => {
+    const withThemeDone = toggleGoal(checkAll(page(), TODAY), 'theme-1')
+    const after = resetDay(withThemeDone, TODAY)
     expect(completedIds(after.goals)).toEqual([])
     expect(completedIds(after.tasks)).toEqual(['tomorrow'])
   })
 
-  it('does not touch completed month goals', () => {
-    const withMonthDone = toggleGoal(page(), 'month-1')
-    const after = resetDay(withMonthDone, TODAY)
+  it('does not touch completed month goals (they reset monthly)', () => {
+    const before = toggleGoal(page(), 'month-1')
+    const after = resetDay(before, TODAY)
     expect(completedIds(after.goals)).toEqual(['month-1'])
+    expect(after.goals[2]).toBe(before.goals[2])
+  })
+})
+
+describe('day actions and unscheduled tasks', () => {
+  it('leaves tasks taken off the schedule untouched', () => {
+    const before = page()
+    before.tasks[0] = { ...before.tasks[0], unscheduled: true }
+    const after = checkAll(before, TODAY)
+    expect(after.tasks[0]).toBe(before.tasks[0])
+    expect(after.tasks[0].completed).toBe(false)
   })
 })

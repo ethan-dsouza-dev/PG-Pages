@@ -56,7 +56,7 @@ Board ─ outer ring (theme hue, translucent)
 - **Item grid:** the primary area has 2 equal columns and each lane has 1. They're filled **row-major**, and the title occupies cell (col 1, row 1). That gives the mockups' placement: in "Low Day Productivity", data order `[Weekly FS, Clean your room, F101]` lands Weekly FS top-right, Clean your room under the title, and F101 under Weekly FS.
 - **Lane columns line up across every group in the board**, because the lane is one continuous band. Define the board's column template once and have groups (nested ones too) inherit it. CSS `subgrid` is the cleanest way and is fine for desktop-only. Using a shared CSS variable for `grid-template-columns` is also acceptable. Acceptance: the lane's item column has the same x-position (±1px) in every group.
 - **Layout modes:**
-  - `compact` shows at most **2 rows**: 3 items in the primary area, because the title takes a cell, and 2 items per lane. If an area has more items than it shows, a **"See all" control** sits to the right of that area's last column: a two-bar "=" icon, the words "See all", and the total count underneath, all in a tiny size. "See all" is a **placeholder** (`// PLACEHOLDER(09)`, see OQ-14).
+  - `compact` shows at most **2 rows**: 3 items in the primary area, because the title takes a cell, and 2 items per lane. If an area has more items than it shows, a **"See all" control** sits to the right of that area's last column: a two-bar "=" icon, the words "See all", and the total count underneath, all in a tiny size. "See all" opens that group (drill-down, LP-7.4–7.9; resolves OQ-14).
   - `expanded` shows every item, with no "See all".
   - An **empty** group (no items in any area) keeps a minimum height (the Productivity mockup's "Tuesday School Day"). Don't render "See all", and include a visually-hidden "No items" message.
 - **Nested groups** (the Productivity mockup's "Wednesday Seminar") render after the parent's item grid, inset by the parent's padding, using the same component recursively. Support **one level of nesting**, and have the type allow deeper nesting. Unlike the WIP mockup, a child must stay **inside** its parent.
@@ -216,8 +216,8 @@ In `tokens.css`, keep the three tiers. **A theme is a set of CSS custom properti
 ## Open questions (add to 00-README)
 | ID | Question | Status |
 |---|---|---|
-| OQ-14 | What does **See all** do? Expand the group in place, open a modal, or navigate? | Open. Placeholder. |
+| OQ-14 | What does **See all** do? Expand the group in place, open a modal, or navigate? | **Resolved:** navigate (drill-down), LP-7.4–7.9. |
 | OQ-15 | Is "(essentially it's priority tasks)" above "Low Day Productivity" UI copy (a group note) or a designer annotation? | Open. Supported as an optional `note`, used in one fixture. |
 | OQ-16 | What makes an item **inactive** (snoozed? out of season? not relevant to this group?), and can the user toggle it? | Open. Rendered muted and non-toggleable. |
 | OQ-17 | Can an item sit in **two** overlap lanes at once, for example Social and Health? | Open. It goes in the first matching lane, in board order. |
-| OQ-18 | Which boards a page shows, and in what order: fixed (Productivity, Self-Care, Leisure) or user-chosen via **Customize**? | Open. Fixed order from the fixture. |
+| OQ-18 | Which boards a page shows, and in what order: fixed (Productivity, Self-Care, Leisure) or user-chosen via **Customize**? | **Resolved:** fixed (LP-7.1). |

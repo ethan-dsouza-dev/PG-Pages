@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMockPage } from '../../data/mock/pgPage'
+import { collectionOf } from '../../domain/pages'
 import { usePGPageStore } from '../../store/pgPageStore'
 import { PGPageView } from './PGPageView'
 
@@ -10,7 +11,7 @@ const pressed = (name: string | RegExp) =>
 
 describe('PGPageView', () => {
   beforeEach(() => {
-    usePGPageStore.setState({ page: createMockPage() })
+    usePGPageStore.setState(collectionOf(createMockPage()))
   })
 
   it('is a section labelled by its one h1, the full page title', () => {
@@ -27,7 +28,7 @@ describe('PGPageView', () => {
     expect(screen.getByText('Version 1')).toBeInTheDocument()
   })
 
-  it('renders the page-action links as placeholders inside a labeled nav', () => {
+  it('renders the export links as placeholders and the page links as live, inside a labeled nav', () => {
     render(<PGPageView />)
     const nav = screen.getByRole('navigation', { name: 'Page actions' })
     const links = within(nav).getAllByRole('button')
@@ -35,10 +36,11 @@ describe('PGPageView', () => {
       'Export to Sheets, coming soon',
       'Export to Calendar, coming soon',
       'Export Additions to Calendar, coming soon',
-      'New PG Page, coming soon',
-      'Other PG Pages, coming soon',
+      'New PG Page',
+      'Your PG Pages▾',
     ])
-    for (const link of links) expect(link).toHaveAttribute('aria-disabled', 'true')
+    for (const link of links.slice(0, 3)) expect(link).toHaveAttribute('aria-disabled', 'true')
+    for (const link of links.slice(3)) expect(link).not.toHaveAttribute('aria-disabled')
   })
 
   it('renders "visit other versions" as a placeholder', () => {

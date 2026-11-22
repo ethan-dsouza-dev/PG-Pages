@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMockPage } from '../../data/mock/pgPage'
+import { collectionOf } from '../../domain/pages'
 import { getTimelineWindow } from '../../domain/timeline'
 import { formatDayLabel } from '../../domain/timelineFormat'
 import { usePGPageStore } from '../../store/pgPageStore'
@@ -14,7 +15,7 @@ const maxScroll = dayWidth * 3 - TEST_ELEMENT_WIDTH
 
 describe('TimelinePanel', () => {
   beforeEach(() => {
-    usePGPageStore.setState({ page: createMockPage(), showFullDay: false })
+    usePGPageStore.setState({ ...collectionOf(createMockPage()), showFullDay: false })
   })
 
   afterEach(() => {
@@ -23,7 +24,7 @@ describe('TimelinePanel', () => {
 
   it("opens on today's date", () => {
     render(<TimelinePanel />)
-    const { timeZone } = usePGPageStore.getState().page
+    const { timeZone } = usePGPageStore.getState().pages[0]
     const today = getTimelineWindow(new Date(), timeZone).days[1]
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(formatDayLabel(today, timeZone))
   })
@@ -130,7 +131,7 @@ describe('TimelinePanel', () => {
     const lateNight = new Date()
     lateNight.setHours(23, 30, 0, 0)
     vi.setSystemTime(lateNight)
-    usePGPageStore.setState({ page: createMockPage() })
+    usePGPageStore.setState(collectionOf(createMockPage()))
 
     const { unmount } = render(<TimelinePanel />)
     expect(screen.queryByTestId('now-indicator')).not.toBeInTheDocument()
