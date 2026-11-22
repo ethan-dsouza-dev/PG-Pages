@@ -50,10 +50,12 @@ Requirement IDs (`TW-x.y`) are for reference in briefs, PRs, and tests. `LP-x.y`
 ### 3.1 Goal tab
 - **TW-3.1 Label** (required).
 - **TW-3.2 Horizon:** how long-term the goal is: **day**, **week**, **month**, or **year**. Required; default from the "+" (TW-1.3), otherwise day.
+- **TW-3.2a Timing and Repeat.** A goal can also have **Timing** (TW-3.7) and **Repeat** (TW-3.8), with the same rules as a task. Both are optional; a goal with no timing just sits in its section. *(Resolves TW-OQ-5.)*
 - Goals are checked off on the page and reset at the end of their horizon (LP-4.2). Nothing about checking is set in this window.
 
 ### 3.2 Theme tab
-- **TW-3.3 Label** (required). The user stories list no other Theme fields (TW-OQ-2).
+- **TW-3.3 Label** (required).
+- **TW-3.3a Month.** Which month the theme is for. Default: the current month. The "Themes and Values for the month" section shows the themes for the month being viewed. *(Resolves TW-OQ-2.)*
 - Themes reset daily and can never be Missed (LP-4.2).
 
 ### 3.3 Task tab
@@ -63,11 +65,12 @@ Requirement IDs (`TW-x.y`) are for reference in briefs, PRs, and tests. `LP-x.y`
 | TW-3.5 | **Social** | Checkbox. Social tasks show in the board's Social lane (LP-7.2) and use the social colours on the timeline (LP-3.12). |
 | TW-3.6 | **Label** | Required. The task's name. |
 | TW-3.7 | **Timing** | One of: **Timed** (start and end time), **All Day**, or **Not timed**. Timed requires end after start. All Day and Not timed tasks live behind the All Day button, not on the time sheet (LP-3.11a). |
-| TW-3.8 | **Repeat** | **Never** (default), **Daily**, **Weekly**, **Monthly**, or **Custom** (TW-OQ-3). Each repeat is an instance of the same task (see §6). |
+| TW-3.8 | **Repeat** | **Never** (default), **Daily**, **Weekly**, **Monthly**, or **Custom**. **Custom** = every **N days, weeks, or months**; when the unit is weeks, also pick the **weekdays** (e.g. Mon/Wed/Fri). Every repeat can end **never**, **on a date**, or **after N times**. Each repeat is an instance of the same task (see §6). *(Resolves TW-OQ-3.)* |
 | TW-3.9 | **Milestones** | Zero or more, each with a **label** and a **time**. A milestone's time must fall inside the task's start–end. Drawn as a clickable vertical line on the task bar (LP-3.13). Only for Timed tasks. |
 | TW-3.10 | **Subphases** | Optional; see §4. Only for Timed tasks. |
+| TW-3.12 | **Counts toward goal** | Optional. Pick one goal this task contributes to (e.g. "Gym" → "Get fit this month"). Only a link for now: checking the task doesn't check the goal. *(Resolves TW-OQ-8.)* |
 
-- **TW-3.11 New sub-folder from the picker.** The folder picker can create a sub-folder in place, asking only for its **name**; its location is wherever the picker is (LP-7.3). *(Assumed; see TW-OQ-6.)*
+- **TW-3.11 Existing folders only.** The folder picker only chooses folders that already exist. New sub-folders are created on the boards (LP-7.3), not from the window. *(Resolves TW-OQ-6.)*
 
 ---
 
@@ -95,7 +98,7 @@ A subphase is a timed child of a task (or of another subphase), drawn as a colou
 
 ### 4.3 Deleting a subphase
 - **TW-4.5 Delete cascades down.** Deleting a subphase also deletes all of its child subphases and every milestone inside them.
-- **TW-4.6 Siblings stay.** Its sibling subphases are kept unchanged. The time it covered becomes an **unsorted** gap in the parent *(meaning assumed; see TW-OQ-4)*.
+- **TW-4.6 Siblings stay.** Its sibling subphases are kept unchanged. The time it covered becomes an empty, **unsorted** gap in the parent's bar; nothing expands to fill it. *(Resolves TW-OQ-4.)*
 - **TW-4.7 Confirm.** Deleting a subphase that has children asks for confirmation, saying how many subphases and milestones will go with it.
 
 ---
@@ -116,6 +119,7 @@ A task can occur more than once, for example a repeating task (TW-3.8) or a manu
 
 - **TW-6.1 Create new instance** (LP-6.7, LP-6.3 hold menu). Opens a small form asking only for the new instance's **start and end** (timing type as the task). Save adds the occurrence to the schedule. It does not create a new task or appear as a new item in the folder.
 - **TW-6.2 See instances.** Lists the instances' start–end times, newest first (LP-6.7 "See previous task instances", LP-6.3 "See all task instances"; scope open as LP-OQ-11).
+- **TW-6.4 Editing a repeating task's time.** When Save changes the start or end of a task that repeats, the window asks which occurrences to change: **Only this one**, **This and following**, or **All**. *(Resolves TW-OQ-7.)*
 - **TW-6.3 Edit instance.** Edits only that occurrence's start, end, and milestones. Changing the label, folder, social flag, or subphase structure is done with **Edit** on the task and applies to all instances.
 
 ---
@@ -126,25 +130,26 @@ The current types (`src/domain/types.ts`) don't hold everything this window edit
 
 | Need | Today | Change |
 |---|---|---|
-| Folder and category | `Task` has none; boards use a separate `BoardItem` | Task gets a folder/category reference (see TW-OQ-1) |
+| Folder and category | `Task` has none; boards use a separate `BoardItem` | **Merge `BoardItem` into `Task`** (TW-OQ-1): a task has a folder (board group) and categories, and boards render tasks |
 | Social flag | Only via `BoardItem.categoryIds` | `Task.social: boolean` |
 | Milestones | None | `milestones: { id, label, at }[]` on tasks and phases |
 | Subphase extras | `Phase` has `title`, `start`, `end`, `subphases` | Add `member?: string`, `milestones`, and the split mode (even/custom) |
 | Repeat | `seriesId` only | A recurrence rule (daily/weekly/monthly/custom); see PROJECT_BRIEF's RRULE `recurrence` |
-| Goal horizon | `GoalScope = 'day' \| 'month' \| 'theme'` | Add `week` and `year`; model Theme as its own type or keep it as a scope (implementer's choice; say which) |
+| Goal horizon | `GoalScope = 'day' \| 'month' \| 'theme'` | Add `week` and `year`; themes get a `month`; goals get optional timing and repeat |
+| Goal link | `Task.goalId` exists, unused | Set from "Counts toward goal" (TW-3.12) |
 
 ---
 
-## 8. Open questions
+## 8. Decisions (were open questions)
 
-| ID | Question | Why it matters | Suggested default |
-|---|---|---|---|
-| TW-OQ-1 | **Task vs. board item.** The timeline uses `Task`, the folder boards use a separate `BoardItem` (brief 09, OQ-7). A task created in this window has to show in both. Merge them into one type, or link them? | Data model, §7 | Merge: boards render `Task`s grouped by folder. |
-| TW-OQ-2 | Does a **Theme** have any field besides its label (e.g. which month it's for)? | TW-3.3 | Label only; it belongs to the current month. |
-| TW-OQ-3 | What can **Custom** repeat express? (Every N days? Chosen weekdays? An end date or count?) | TW-3.8 | Chosen weekdays every N weeks, with an optional end date. |
-| TW-OQ-4 | "When a subphase is deleted … the previous subphase becomes unsorted." Does that mean the deleted span becomes an unassigned gap, or that the *previous sibling* loses its position and needs re-placing? | TW-4.6 | The deleted span becomes an unassigned gap. |
-| TW-OQ-5 | Can a **Goal** have Timing, Repeat, or subphases, or only Label and Horizon? | §3.1 | Only Label and Horizon, as the user stories list. |
-| TW-OQ-6 | Can the user create a new sub-folder from inside the folder picker (TW-3.11), or only from the boards? | TW-3.11 | Yes, from the picker. |
-| TW-OQ-7 | When editing a **repeating** task, do changes to start/end apply to all future instances, or only to the pattern from now on? | §6 | All future instances; past ones keep their times. |
-| TW-OQ-8 | Can a task be linked to a **Goal** from this window (the code has `Task.goalId`)? The user stories don't mention it. | §3.3 | Not in this version. |
-| TW-OQ-9 | No mockup exists for the window. Is a design coming, or should the implementer design it from the PG Page's existing tokens? | Visual design | Build from existing tokens and primitives; revise when a mockup arrives. |
+| ID | Question | Decision |
+|---|---|---|
+| ~~TW-OQ-1~~ | Task vs. board item | **Merge** into one type: boards render `Task`s grouped by folder. |
+| ~~TW-OQ-2~~ | Theme fields | **Label + month** (TW-3.3a). |
+| ~~TW-OQ-3~~ | Custom repeat | **Both**: every N days/weeks/months, weekdays when weekly, end never/on date/after N times (TW-3.8). |
+| ~~TW-OQ-4~~ | Deleting a subphase | The deleted span becomes an **empty gap**; siblings keep their times (TW-4.6). |
+| ~~TW-OQ-5~~ | Goal fields | Label, horizon, **plus optional timing and repeat** (TW-3.2a). |
+| ~~TW-OQ-6~~ | New sub-folder from the picker | **No**: folders are made on the boards only (TW-3.11). |
+| ~~TW-OQ-7~~ | Editing a repeating task | **Ask each time**: Only this one / This and following / All (TW-6.4). |
+| ~~TW-OQ-8~~ | Link a task to a goal | **Yes, optional** "Counts toward goal" (TW-3.12). |
+| ~~TW-OQ-9~~ | Visual design | **Design from the existing tokens and primitives**; revise if a mockup arrives. |
