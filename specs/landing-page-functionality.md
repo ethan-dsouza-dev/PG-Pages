@@ -63,7 +63,8 @@ Task interactions (§6) apply wherever a task appears: on the time representatio
 - **LP-3.10 Time never changes status.** The passage of time **does not** auto-complete or auto-fail any task or goal. Completion is entirely user-driven. The only automatic state change is the daily reset (LP-5.3).
 
 ### 3.5 Tasks on the time representation
-- **LP-3.11 Placement.** Timed tasks render in their category's column at their start/end times. "All Day" tasks and untimed tasks render without a time slot *(placement TBD, LP-OQ-4)*.
+- **LP-3.11 Placement.** Timed tasks render in their category's column at their start/end times. "All Day" and untimed tasks are **not** drawn on the time sheet (see LP-3.11a).
+- **LP-3.11a All Day / untimed tasks.** A button sits **outside** the time sheet. Pressing it shows that day's All Day and untimed tasks. In **Calendar** view they appear Google-Calendar style: an all-day strip at the top of each day, above the hours. *(Resolves LP-OQ-4.)*
 - **LP-3.12 Social vs. personal.** Unchecked **social** tasks show white text on a darker shade of the category colour; unchecked **personal/private** tasks show black text on a lighter shade.
 - **LP-3.13 Milestones.** A task's milestones render as clickable vertical markers on its bar.
 - **LP-3.14 Subphases.** A task with subphases renders its bar split into one coloured section per subphase. Clicking a subphase section opens the New/Edit Task window directly on that subphase's editor.
@@ -76,8 +77,15 @@ Task interactions (§6) apply wherever a task appears: on the time representatio
 ## 4. Goals and themes sections
 
 - **LP-4.1 Sections.** The page shows goal/theme chip sections (e.g. "Goals for the day", "Goals for the month", "Themes and Values for the month").
-- **LP-4.2 Daily check.** Every goal and theme can be checked off **daily**, regardless of its horizon (day/week/month/year). Checks clear at the reset time (LP-5.3).
-- **LP-4.3 Checking.** Goals and themes use the same check flow and three completion states as tasks (§6.1).
+- **LP-4.2 Reset and Missed rules by item type.** *(Resolves LP-OQ-6.)*
+
+| Item | Resets (Done → Unchecked) | Can be Missed? |
+|---|---|---|
+| **Task** | Every day | Yes |
+| **Goal** | At the end of its horizon: day goals daily, month goals monthly (week/year goals weekly/yearly, by the same rule) | Yes |
+| **Theme** | Every day | **No**, never |
+
+- **LP-4.3 Checking.** Goals use the same check flow and states as tasks (§6.1). Themes use it too, but have only **Unchecked** and **Done**: nothing can mark a theme Missed.
 - **LP-4.4 Context-aware "+".** Each section has a "+" button that opens the New Task window pre-set for that section (see LP-6.10).
 - **LP-4.5 Right-click.** Goals and themes support the same right-click menu as tasks (§6.2), with labels adjusted ("Duplicate goal", "Duplicate theme").
 
@@ -85,9 +93,9 @@ Task interactions (§6) apply wherever a task appears: on the time representatio
 
 ## 5. Day actions and reset
 
-- **LP-5.1 Reset Day.** Turns every **Done** (green) task, goal, and theme for the day back to **Unchecked**. **Missed** (red) items stay red. *(Resolves LP-OQ-2.)*
+- **LP-5.1 Reset Day.** Turns every **Done** (green) task, **day** goal, and theme back to **Unchecked**. **Missed** (red) items stay red. Month (and other longer-horizon) goals are not touched, since they don't reset daily (LP-4.2). *(Resolves LP-OQ-2; the longer-horizon exclusion follows from LP-OQ-6.)*
 - **LP-5.2 Change Reset Time.** Opens a control to set the daily reset time for this PG Page. Default **12:00 am**.
-- **LP-5.3 Automatic daily reset.** At the reset time, all **daily** tasks, goals, and themes are reset the same way as Reset Day (LP-5.1): Done → Unchecked. *(Assumed to match LP-5.1; Missed items stay red.)* This is the only automatic, time-driven behaviour on the page.
+- **LP-5.3 Automatic reset.** At the reset time each day, tasks, day goals, and themes reset as in Reset Day (LP-5.1). At the reset time on the first day of a new month, month goals reset too (likewise week/year goals at their boundaries). Done → Unchecked; Missed stays red. *(Missed staying red is assumed to match LP-5.1.)* This is the only automatic, time-driven behaviour on the page.
 
 ---
 
@@ -104,14 +112,18 @@ Three states:
 
 - **LP-6.1 First-click confirmation.** Left-clicking an Unchecked task asks the user to confirm they meant to check it off.
 - **LP-6.2 One-click window.** Once the user has confirmed, any task can be checked with a single click for the next **60 seconds**. After 60s without a confirmation, LP-6.1 applies again.
-- **LP-6.3 Mark missed.** Pressing and holding a task for **3 seconds** sets it to Missed (red).
+- **LP-6.3 Hold for instance actions.** Pressing and holding a task for **3 seconds** opens a dropdown of actions instead of changing its state *(resolves LP-OQ-5)*:
+  - **Create new task instance** (as LP-6.7)
+  - **See all task instances**: a list of all instances in the same task category
+  - **Edit task instance**: edits this one occurrence only
+
+  How a task becomes **Missed** now is open (LP-OQ-10).
 - **LP-6.4 Missed → Done.** Clicking a Missed task marks it Done (green) in one click.
 - **LP-6.5 Un-check.** Clicking a Done task prompts *"Are you sure you mean to un-check this task?"*. Confirming returns it to Unchecked.
 
 | From | Action | To |
 |---|---|---|
 | Unchecked | click (+ confirm unless within 60s window) | Done |
-| Any | hold 3s | Missed |
 | Missed | click | Done |
 | Done | click + confirm | Unchecked |
 
@@ -123,6 +135,9 @@ Right-clicking a task (on the time representation or in a folder) opens a menu w
 - **LP-6.8 Duplicate.** Opens the New Task window pre-filled with all of the selected item's parameters, creating a *new* independent task/goal/theme on save.
 - **LP-6.9 Remove.** Takes the task off the schedule without deleting it (it stays in its folder). **Greyed out** when the task is not on the upcoming schedule.
 - **LP-6.10 Delete.** Confirms with *"Are you sure? Your task will be permanently deleted."* and **Proceed** / **Cancel**. Proceed deletes the task permanently.
+
+### 6.2a Bulk actions
+- **LP-6.12 Select Task(s).** "Select Task(s)" turns on a multi-select mode. The user selects several tasks, then right-clicking any selected task opens the right-click menu (§6.2), and the chosen action applies to **all** selected tasks. Actions that only make sense for one task (e.g. Edit) are greyed out when more than one is selected.
 
 ### 6.3 Opening the New Task window
 - **LP-6.11 "+" buttons.** Every "+" on the page opens the New Task window as a popup, **pre-filled based on where it was pressed**:
@@ -169,6 +184,9 @@ The design goal is **short scrolls and more quick clicks**, not long scrolling.
 - **LP-8.1 Ad detail.** Clicking an ad (painting/poster) opens a popup with: a larger image, the ad's description, and a link to the advertiser's website (opens externally).
 - **LP-8.2 Swap ad.** The popup has a button to replace this ad slot with one of the **alternative approved ads** for that slot. The user's choice persists for their PG Page.
 - **LP-8.3 Approved only.** Only ads accepted by a PG Page Company reviewer are ever shown. Ads pending review never reach the landing page.
+- **LP-8.4 Edit gallery.** The user can put the gallery into an edit mode and scroll through available ads to choose which ones hang on their wall.
+- **LP-8.5 Weekly rotation.** Ads change every week. *(Like an end-of-year scholastic book catalogue: advertisers should make things people want to look at.)*
+- **LP-8.6 Ad type controls.** The user can choose which **types** of ads they see, e.g. to avoid ads tied to a personal addiction. Excluded types never appear in the gallery, in rotation, or as swap alternatives.
 
 ---
 
@@ -203,8 +221,10 @@ The design goal is **short scrolls and more quick clicks**, not long scrolling.
 | ~~LP-OQ-9~~ | ~~Signed-out use vs. auth gate.~~ **Resolved:** both are supported behind the `VITE_AUTH_ENABLED` flag (default off). See LP-2.5. | LP-2.5 |
 | ~~LP-OQ-2~~ | ~~Does Reset Day clear red items?~~ **Resolved:** no, only Done (green) → Unchecked. See LP-5.1. | LP-5.1 |
 | LP-OQ-3 | Is the 60s one-click window (LP-6.2) measured from the *last* confirmation or the last check? Is it per session or per PG Page? | Check flow |
-| LP-OQ-4 | Where do **All Day** and **untimed** tasks appear on the time representation? | LP-3.11 |
-| LP-OQ-5 | Does the 3-second hold (LP-6.3) work from every state, including Done? | State table |
-| LP-OQ-6 | Is a goal/theme's daily check (LP-4.2) independent of its horizon, i.e. a month goal can be ticked each day and resets nightly? | Goal model |
-| LP-OQ-7 | Does the ad swap (LP-8.2) persist per PG Page or per user? | Ad model |
-| LP-OQ-8 | The "Select Task(s)" and "Check All" controls in the current mockup are not in the user stories. Keep, change, or drop? (See brief 06 / OQ-3.) | Day actions |
+| ~~LP-OQ-4~~ | ~~Where do All Day and untimed tasks appear?~~ **Resolved:** behind a button outside the time sheet; Google-Calendar-style all-day strip in Calendar view. See LP-3.11a. | LP-3.11 |
+| ~~LP-OQ-5~~ | ~~Does the 3-second hold work from every state?~~ **Resolved:** the hold opens an instance-actions dropdown instead of changing state. See LP-6.3. | LP-6.3 |
+| ~~LP-OQ-6~~ | ~~Is a goal/theme's daily check independent of its horizon?~~ **Resolved:** tasks reset daily and can be Missed; goals reset at their horizon and can be Missed; themes reset daily and can never be Missed. See LP-4.2. | LP-4.2, LP-5 |
+| LP-OQ-7 | Does the ad swap / gallery choice (LP-8.2, LP-8.4) persist per PG Page or per user? And when ads rotate weekly (LP-8.5), does a user's chosen ad stay or get replaced? | Ad model |
+| LP-OQ-8 | **Partly resolved.** **Select Task(s)** is bulk task management: select several tasks, then right-click to apply one action to all of them (see LP-6.12). Still open: does **Check All** stay? | Day actions |
+| LP-OQ-10 | The 3-second hold no longer marks a task **Missed** (LP-6.3). How does a task or goal become Missed now: a menu entry, a different gesture, or something else? | §6.1 state table |
+| LP-OQ-11 | "See all task instances" lists instances "with the same task category". Does that mean instances of **this task**, or of every task in the same category/folder? | LP-6.3 |
