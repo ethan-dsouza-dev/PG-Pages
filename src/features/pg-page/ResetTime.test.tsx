@@ -5,10 +5,11 @@ import { createMockPage } from '../../data/mock/pgPage'
 import { usePGPageStore } from '../../store/pgPageStore'
 import { DayActions } from './DayActions'
 import { useDailyReset } from './useDailyReset'
+import { activePage, collectionOf } from '../../domain/pages'
 
 describe('Change Reset Time (LP-5.2)', () => {
   beforeEach(() => {
-    usePGPageStore.setState({ page: createMockPage() })
+    usePGPageStore.setState(collectionOf(createMockPage()))
   })
 
   it('opens a labelled dialog showing the current time and saves a new one', async () => {
@@ -28,7 +29,7 @@ describe('Change Reset Time (LP-5.2)', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(usePGPageStore.getState().page.resetTime).toBe('05:30')
+    expect(activePage(usePGPageStore.getState()).resetTime).toBe('05:30')
     expect(screen.getByRole('status')).toHaveTextContent('Daily reset time set to 5:30 am')
     expect(trigger).toHaveFocus()
   })
@@ -47,7 +48,7 @@ describe('Change Reset Time (LP-5.2)', () => {
     expect(screen.getByLabelText('Reset time')).toHaveValue('00:00')
     await user.keyboard('{Escape}')
 
-    expect(usePGPageStore.getState().page.resetTime).toBe('00:00')
+    expect(activePage(usePGPageStore.getState()).resetTime).toBe('00:00')
   })
 
   it('disables Save while the time is empty', async () => {
@@ -67,8 +68,8 @@ describe('useDailyReset (LP-5.3)', () => {
   it('resets goals, themes and today\'s tasks once the reset time passes, and only once', () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
     vi.setSystemTime(new Date('2026-10-10T23:59:00Z'))
-    usePGPageStore.setState({ page: createMockPage(new Date(), 'UTC') })
-    const completed = () => usePGPageStore.getState().page.goals.filter((g) => g.completed).map((g) => g.id)
+    usePGPageStore.setState(collectionOf(createMockPage(new Date(), 'UTC')))
+    const completed = () => activePage(usePGPageStore.getState()).goals.filter((g) => g.completed).map((g) => g.id)
     expect(completed()).toEqual(['day-read', 'month-gym'])
 
     renderHook(() => useDailyReset(30_000))
@@ -76,21 +77,21 @@ describe('useDailyReset (LP-5.3)', () => {
 
     act(() => vi.advanceTimersByTime(60_000)) // past 00:00 UTC, mid-month
     expect(completed()).toEqual(['month-gym'])
-    const resetAt = usePGPageStore.getState().page.lastResetAt
+    const resetAt = activePage(usePGPageStore.getState()).lastResetAt
     expect(new Date(resetAt) >= new Date('2026-10-11T00:00:00Z')).toBe(true)
 
     act(() => usePGPageStore.getState().toggleGoal('theme-discipline'))
     act(() => vi.advanceTimersByTime(60 * 60_000))
     expect(completed()).toEqual(['month-gym', 'theme-discipline'])
-    expect(usePGPageStore.getState().page.lastResetAt).toBe(resetAt)
+    expect(activePage(usePGPageStore.getState()).lastResetAt).toBe(resetAt)
   })
 
   it('also resets month goals at the first reset of a new month', () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
     vi.setSystemTime(new Date('2026-10-31T23:59:00Z'))
-    usePGPageStore.setState({ page: createMockPage(new Date(), 'UTC') })
+    usePGPageStore.setState(collectionOf(createMockPage(new Date(), 'UTC')))
     renderHook(() => useDailyReset(30_000))
     act(() => vi.advanceTimersByTime(60_000)) // past 00:00 UTC on Nov 1
-    expect(usePGPageStore.getState().page.goals.some((g) => g.completed)).toBe(false)
+    expect(activePage(usePGPageStore.getState()).goals.some((g) => g.completed)).toBe(false)
   })
 })

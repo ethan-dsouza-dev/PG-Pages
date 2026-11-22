@@ -4,10 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMockPage } from '../../data/mock/pgPage'
 import { usePGPageStore } from '../../store/pgPageStore'
 import { TimelinePanel } from './TimelinePanel'
+import { activePage, collectionOf } from '../../domain/pages'
 
 const taskBar = (title: string) => screen.getByRole('button', { name: new RegExp(`^${title}, `) })
 
-const storedTask = (id: string) => usePGPageStore.getState().page.tasks.find((t) => t.id === id)
+const storedTask = (id: string) => activePage(usePGPageStore.getState()).tasks.find((t) => t.id === id)
 
 async function openMenu(user: ReturnType<typeof userEvent.setup>, bar: Element) {
   await user.pointer({ keys: '[MouseRight]', target: bar })
@@ -16,7 +17,7 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>, bar: Element) 
 
 describe('task context menu', () => {
   beforeEach(() => {
-    usePGPageStore.setState({ page: createMockPage() })
+    usePGPageStore.setState(collectionOf(createMockPage()))
   })
 
   afterEach(() => {
@@ -56,7 +57,7 @@ describe('task context menu', () => {
     await user.click(within(menu).getByRole('menuitem', { name: /^Duplicate/ }))
     expect(info).toHaveBeenCalledWith(expect.stringContaining('Duplicate'))
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(usePGPageStore.getState().page.tasks).toHaveLength(createMockPage().tasks.length)
+    expect(activePage(usePGPageStore.getState()).tasks).toHaveLength(createMockPage().tasks.length)
   })
 
   it('Remove takes the task off the timeline but keeps it in the page', async () => {

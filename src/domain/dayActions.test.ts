@@ -16,7 +16,7 @@ function page(): PGPage {
   return {
     id: 'p',
     ownerName: 'Jake',
-    title: "Jake's First PG Page",
+    name: "Jake's First",
     version: 1,
     timeZone: 'UTC',
     resetTime: '00:00',

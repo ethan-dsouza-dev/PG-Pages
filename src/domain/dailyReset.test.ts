@@ -120,7 +120,7 @@ function page(overrides: Partial<PGPage> = {}): PGPage {
   return {
     id: 'p',
     ownerName: 'Jake',
-    title: 'Page',
+    name: 'Page',
     version: 1,
     timeZone: 'UTC',
     resetTime: '00:00',

@@ -21,7 +21,7 @@ const removed = task('removed', '2026-11-21T10:00:00Z', { unscheduled: true })
 const page: PGPage = {
   id: 'p',
   ownerName: 'Test',
-  title: 'Test',
+  name: 'Test',
   version: 1,
   timeZone: 'UTC',
   goals: [],

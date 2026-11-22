@@ -3,13 +3,14 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createMockPage } from '../../data/mock/pgPage'
+import { collectionOf } from '../../domain/pages'
 import { usePGPageStore } from '../../store/pgPageStore'
 import { GoalSection } from './GoalSection'
 import { GoalSections } from './GoalSections'
 
 describe('GoalSections', () => {
   beforeEach(() => {
-    usePGPageStore.setState({ page: createMockPage() })
+    usePGPageStore.setState(collectionOf(createMockPage()))
   })
 
   it('renders the three sections with their chips and a "+" at the end', () => {

@@ -1,6 +1,7 @@
 import { TZDate } from '@date-fns/tz'
 import { addDays, startOfDay } from 'date-fns'
 import { DEFAULT_RESET_TIME, latestResetBoundary } from '../../domain/dailyReset'
+import { formatTitleLead } from '../../domain/pageTitle'
 import type { Goal, PGPage, Phase, Task } from '../../domain/types'
 
 /*
@@ -100,7 +101,7 @@ export function createMockPage(
   return {
     id: 'jakes-first-pg-page',
     ownerName: 'Jake',
-    title: "Jake's First PG Page",
+    name: formatTitleLead('Jake'),
     version: 1,
     timeZone,
     resetTime: DEFAULT_RESET_TIME,

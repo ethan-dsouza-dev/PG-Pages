@@ -7,11 +7,12 @@ import { changeWallAd, GALLERY_AD_COUNT, pickAds } from '../domain/ads'
 import * as boards from '../domain/boards'
 import * as dailyReset from '../domain/dailyReset'
 import * as dayActions from '../domain/dayActions'
+import * as pages from '../domain/pages'
 import * as taskActions from '../domain/taskActions'
 import type { Ad, Board, BoardItem, Category, CategoryId, Goal, GoalScope, PGPage, Task } from '../domain/types'
 
-type PGPageState = {
-  page: PGPage
+/** Holds every PG Page; the selector hooks below read the active one. */
+type PGPageState = pages.PageCollection & {
   /** Every ad that may hang on the wall (OQ-10: the real source is still open). */
   adPool: readonly Ad[]
   /**
@@ -39,37 +40,59 @@ type PGPageState = {
   toggleBoardItem: (itemId: string) => void
   /**
    * Swaps the ad in gallery slot `slot` for one from the pool not already on
-   * the wall (LP-8.2). In memory only: whether the choice persists per page or
-   * per user is LP-OQ-7.
+   * the wall (LP-8.2). In memory only for now; LP-8.2 saves it per user.
    */
   changeGalleryAd: (slot: number) => void
+  /** LP-2.1: names the active page. */
+  renamePage: (name: string) => void
+  /** LP-2.2: adds an empty page and switches to it. */
+  createPage: () => void
+  /** LP-2.3: shows another page. */
+  switchPage: (pageId: string) => void
 }
 
 // Static UI phase: the page always comes from mock data (README rule 1).
-export const usePGPageStore = create<PGPageState>()((set) => ({
-  page: createMockPage(),
-  adPool: MOCK_ADS,
-  galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
-  boards: MOCK_BOARDS,
-  boardItems: MOCK_BOARD_ITEMS,
-  categories: MOCK_CATEGORIES,
-  toggleGoal: (goalId) => set((s) => ({ page: dayActions.toggleGoal(s.page, goalId) })),
-  toggleTask: (taskId) => set((s) => ({ page: dayActions.toggleTask(s.page, taskId) })),
-  checkAll: (day) => set((s) => ({ page: dayActions.checkAll(s.page, day) })),
-  resetDay: (day) => set((s) => ({ page: dayActions.resetDay(s.page, day) })),
-  setResetTime: (resetTime, now) => set((s) => ({ page: dailyReset.changeResetTime(s.page, resetTime, now) })),
-  runDailyResetIfDue: (now) =>
-    set((s) => {
-      const page = dailyReset.applyDailyResetIfDue(s.page, now)
-      return page === s.page ? s : { page }
-    }),
-  unscheduleTask: (taskId, now = new Date()) =>
-    set((s) => ({ page: taskActions.unscheduleTask(s.page, taskId, now) })),
-  deleteTask: (taskId) => set((s) => ({ page: taskActions.deleteTask(s.page, taskId) })),
-  toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
-  // TODO(LP-OQ-7): persist the swap per page or per user once that is decided.
-  changeGalleryAd: (slot) => set((s) => ({ galleryAds: changeWallAd(s.adPool, s.galleryAds, slot) })),
-}))
+export const usePGPageStore = create<PGPageState>()((set) => {
+  /** Runs a page reducer on the active page only. */
+  const onActive = (update: (page: PGPage) => PGPage) =>
+    set((s) => pages.updateActivePage(s, update))
+
+  return {
+    ...pages.collectionOf(createMockPage()),
+    adPool: MOCK_ADS,
+    galleryAds: pickAds(MOCK_ADS, GALLERY_AD_COUNT),
+    boards: MOCK_BOARDS,
+    boardItems: MOCK_BOARD_ITEMS,
+    categories: MOCK_CATEGORIES,
+    toggleGoal: (goalId) => onActive((p) => dayActions.toggleGoal(p, goalId)),
+    toggleTask: (taskId) => onActive((p) => dayActions.toggleTask(p, taskId)),
+    checkAll: (day) => onActive((p) => dayActions.checkAll(p, day)),
+    resetDay: (day) => onActive((p) => dayActions.resetDay(p, day)),
+    setResetTime: (resetTime, now) => onActive((p) => dailyReset.changeResetTime(p, resetTime, now)),
+    // Every page resets at its own reset time, shown or not.
+    runDailyResetIfDue: (now) =>
+      set((s) => {
+        let changed = false
+        const next = s.pages.map((p) => {
+          const reset = dailyReset.applyDailyResetIfDue(p, now)
+          if (reset !== p) changed = true
+          return reset
+        })
+        return changed ? { pages: next } : s
+      }),
+    unscheduleTask: (taskId, now = new Date()) => onActive((p) => taskActions.unscheduleTask(p, taskId, now)),
+    deleteTask: (taskId) => onActive((p) => taskActions.deleteTask(p, taskId)),
+    toggleBoardItem: (itemId) => set((s) => ({ boardItems: boards.toggleBoardItem(s.boardItems, itemId) })),
+    // TODO(LP-8.2): save the swap per user once persistence exists.
+    changeGalleryAd: (slot) => set((s) => ({ galleryAds: changeWallAd(s.adPool, s.galleryAds, slot) })),
+    renamePage: (name) => onActive((p) => pages.renamePage(p, name)),
+    createPage: () => set((s) => pages.addEmptyPage(s, crypto.randomUUID())),
+    switchPage: (pageId) => set((s) => pages.switchPage(s, pageId)),
+  }
+})
+
+/** The page every section shows. */
+const active = (s: PGPageState): PGPage => pages.activePage(s)
 
 /*
  * Per-section selector hooks. Reducers keep unchanged items by reference, so
@@ -77,31 +100,32 @@ export const usePGPageStore = create<PGPageState>()((set) => ({
  */
 
 export function useGoals(scope: GoalScope): Goal[] {
-  return usePGPageStore(useShallow((s) => s.page.goals.filter((g) => g.scope === scope)))
+  return usePGPageStore(useShallow((s) => active(s).goals.filter((g) => g.scope === scope)))
 }
 
 export function useTasks(): Task[] {
-  return usePGPageStore((s) => s.page.tasks)
+  return usePGPageStore((s) => active(s).tasks)
 }
 
 /** Tasks shown on the timeline: every task not taken off the schedule. */
 export function useScheduledTasks(): Task[] {
-  return usePGPageStore(useShallow((s) => taskActions.scheduledTasks(s.page.tasks)))
+  return usePGPageStore(useShallow((s) => taskActions.scheduledTasks(active(s).tasks)))
 }
 
 export function usePageMeta() {
   return usePGPageStore(
     useShallow((s) => ({
-      ownerName: s.page.ownerName,
-      title: s.page.title,
-      version: s.page.version,
-      timeZone: s.page.timeZone,
+      id: active(s).id,
+      ownerName: active(s).ownerName,
+      name: active(s).name,
+      version: active(s).version,
+      timeZone: active(s).timeZone,
     })),
   )
 }
 
 export function useResetTime(): string {
-  return usePGPageStore((s) => s.page.resetTime)
+  return usePGPageStore((s) => active(s).resetTime)
 }
 
 /** The ads hanging on the gallery wall for this page load. */
@@ -132,6 +156,17 @@ export function usePGPageActions() {
       unscheduleTask: s.unscheduleTask,
       deleteTask: s.deleteTask,
     })),
+  )
+}
+
+/** Every PG Page, in "Your PG Pages" order. */
+export function usePages(): PGPage[] {
+  return usePGPageStore((s) => s.pages)
+}
+
+export function usePageCollectionActions() {
+  return usePGPageStore(
+    useShallow((s) => ({ renamePage: s.renamePage, createPage: s.createPage, switchPage: s.switchPage })),
   )
 }
 
