@@ -8,19 +8,21 @@ type SeeAllButtonProps = {
   /** Accessible name, e.g. "See all 22 Productivity items in Low Day Productivity". */
   label: string
   className?: string
+  /** What it opens. Without one it renders as a placeholder. */
+  onClick?: () => void
 }
 
 /**
- * A tiny "=" icon over "See all" and the count. Placeholder only: what it opens
- * is OQ-14.
+ * A tiny "=" icon over "See all" and the count. On boards it drills into the
+ * group (LP-7.4–7.7, answering OQ-14); without `onClick` it is a placeholder.
  */
-export function SeeAllButton({ count, label, className }: SeeAllButtonProps) {
-  // PLACEHOLDER(09): See all (OQ-14: expand in place, modal, or navigate?)
+export function SeeAllButton({ count, label, className, onClick }: SeeAllButtonProps) {
+  const isPlaceholder = onClick === undefined
   return (
     <button
       type="button"
-      {...placeholderAttrs}
-      onClick={() => logPlaceholder(label)}
+      {...(isPlaceholder ? placeholderAttrs : {})}
+      onClick={onClick ?? (() => logPlaceholder(label))}
       className={cx('interactive flex flex-col items-start gap-0.5 text-left text-caption leading-tight whitespace-nowrap', className)}
     >
       <span aria-hidden="true" className="flex w-6 flex-col gap-1 pb-1">
@@ -33,7 +35,7 @@ export function SeeAllButton({ count, label, className }: SeeAllButtonProps) {
       </span>
       <span className="sr-only">
         {label}
-        <ComingSoonHint />
+        {isPlaceholder && <ComingSoonHint />}
       </span>
     </button>
   )

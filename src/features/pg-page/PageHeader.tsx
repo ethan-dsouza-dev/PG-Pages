@@ -1,6 +1,7 @@
 import { DEFAULT_PAGE_NAME, PAGE_NAME_MAX_LENGTH, displayName } from '../../domain/pages'
 import { usePageCollectionActions, usePageMeta } from '../../store/pgPageStore'
 import { TextLink } from '../../ui'
+import { SignOutLink } from '../auth'
 
 /** The page-name text box, so "New PG Page" can focus it for naming. */
 export const PAGE_NAME_INPUT_ID = 'pg-page-name'
@@ -41,6 +42,7 @@ export function PageHeader({ titleId }: { titleId?: string }) {
         <TextLink size="meta" placeholder className="pl-1">
           visit other versions
         </TextLink>
+        <SignOutLink />
       </div>
     </header>
   )

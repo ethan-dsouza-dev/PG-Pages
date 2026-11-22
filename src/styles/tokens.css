@@ -85,6 +85,8 @@
   --color-group-panel: var(--group-panel);
   --color-board-lane: var(--board-lane);
   --color-board-item-inactive: var(--palette-brown-500);
+  /* Outline around a folder's items on today's schedule (LP-7.8). */
+  --color-today-outline: var(--palette-ink-900);
   /* Gap between adjacent phase segments on a board chip's strip. */
   --color-phase-gap: var(--palette-white);
 
@@ -114,6 +116,8 @@
   /* Focus ring drawn on top of dark or saturated fills (timeline bars, phases) */
   --color-focus-ring-inverse: var(--palette-white);
   --color-overlay: var(--palette-ink-900-a40);
+  /* Accent bar beside error messages (the text itself stays --color-text for contrast). */
+  --color-error: var(--palette-red-600);
 
   /* Typography */
   --font-display: var(--palette-font-display);
@@ -192,6 +196,20 @@
   --lane-radius: 3.4cqi;
   /* An empty group keeps this much room for items. */
   --group-empty-min-height: 12cqi;
+
+  /*
+   * Drill-down (LP-7.4–7.7). Caps are fixed pixels per the landing-page spec;
+   * overflow is hidden, and the user clicks in to see more.
+   */
+  /* Root view: a whole category board. */
+  --board-root-max-height: 850px;
+  /* A child folder shown inside the open folder. Leaf folders, once open, have no cap. */
+  --folder-child-max-height: 550px;
+  /* The open folder's scroll area, so only its contents scroll (LP-7.7). */
+  --board-open-max-height: 80dvh;
+  /* The black outline around today's items (LP-7.8). */
+  --today-outline-width: 0.3cqi;
+  --today-outline-radius: 2.4cqi;
 }
 
 /*

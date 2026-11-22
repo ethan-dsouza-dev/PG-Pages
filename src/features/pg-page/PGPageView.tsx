@@ -3,6 +3,7 @@ import { DayActions } from './DayActions'
 import { GoalSections } from './GoalSections'
 import { PageHeader } from './PageHeader'
 import { PageLinks } from './PageLinks'
+import { useDailyReset } from './useDailyReset'
 
 const TITLE_ID = 'pg-page-title'
 
@@ -11,6 +12,8 @@ const TITLE_ID = 'pg-page-title'
  * then lays out the header column beside the timeline, then actions and goals.
  */
 export function PGPageView() {
+  // LP-5.3: automatic daily reset while the page is open.
+  useDailyReset()
   return (
     <section aria-labelledby={TITLE_ID} className="bg-surface-page">
       <div className="mx-auto grid max-w-page grid-cols-[minmax(20rem,2fr)_minmax(0,4.5fr)] gap-x-12 gap-y-10 px-16 py-10">

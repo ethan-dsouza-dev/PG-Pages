@@ -27,3 +27,36 @@ export function adAspectRatio(ad: Pick<Ad, 'image'>): number {
 export function adAccessibleName(ad: Pick<Ad, 'advertiser' | 'caption'>): string {
   return ad.caption ? `Advertisement: ${ad.advertiser}, ${ad.caption}` : `Advertisement: ${ad.advertiser}`
 }
+
+/**
+ * Picks an ad from `pool` to replace the one in `slot` of `wall` (LP-8.2):
+ * any ad not already hanging on the wall, at random. Returns `undefined` when
+ * every ad in the pool is already up (or the slot is out of range).
+ */
+export function pickReplacementAd(
+  pool: readonly Ad[],
+  wall: readonly Ad[],
+  slot: number,
+  random: () => number = Math.random,
+): Ad | undefined {
+  if (wall[slot] === undefined) return undefined
+  const hanging = new Set(wall.map((ad) => ad.id))
+  const candidates = pool.filter((ad) => !hanging.has(ad.id))
+  return pickAds(candidates, 1, random)[0]
+}
+
+/**
+ * Returns a copy of `wall` with the ad in `slot` swapped for a random ad from
+ * `pool` that is not already on the wall. Returns `wall` itself when there is
+ * nothing to swap in, so subscribers do not re-render.
+ */
+export function changeWallAd(
+  pool: readonly Ad[],
+  wall: Ad[],
+  slot: number,
+  random: () => number = Math.random,
+): Ad[] {
+  const replacement = pickReplacementAd(pool, wall, slot, random)
+  if (!replacement) return wall
+  return wall.map((ad, i) => (i === slot ? replacement : ad))
+}

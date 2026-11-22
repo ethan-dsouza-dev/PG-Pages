@@ -51,6 +51,9 @@ export function addEmptyPage(c: PageCollection, id: string): PageCollection {
     name: nextDefaultName(c.pages),
     version: 1,
     timeZone: from.timeZone,
+    // Reset settings carry over too; nothing is checked yet, so the last reset can as well.
+    resetTime: from.resetTime,
+    lastResetAt: from.lastResetAt,
     goals: [],
     tasks: [],
   }

@@ -16,7 +16,7 @@ function boardSection(boardId: string): PageSection {
  * The page's sections, top to bottom. Each one is a full-bleed, labelled
  * `<section>` that paints its own background. To add a section, append it here.
  * The page footer is not a section: PageStack renders it after `<main>`.
- * TODO(OQ-18): the boards and their order are fixed until Customize exists.
+ * The three boards and their order are fixed (LP-7.1, answering OQ-18).
  */
 export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: 'pg-page', Component: PGPageView },

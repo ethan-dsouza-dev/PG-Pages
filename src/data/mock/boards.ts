@@ -1,4 +1,13 @@
-import type { Board, BoardItem, BoardItemStatus, Category, CategoryId, Phase, TimeSpan } from '../../domain/types'
+import type {
+  Board,
+  BoardItem,
+  BoardItemSchedule,
+  BoardItemStatus,
+  Category,
+  CategoryId,
+  Phase,
+  TimeSpan,
+} from '../../domain/types'
 
 /*
  * Mock category boards that rebuild specs/mockups/board-productivity-v1.png,
@@ -68,6 +77,17 @@ function repeatItems(
   return Array.from({ length: count }, (_, i) => plain(`${prefix}-${i + 1}`, title, categoryIds, status))
 }
 
+/*
+ * Schedules (LP-7.8) are weekday repeats or fixed past dates, so which items
+ * count as "today's" never depends on when the mock is loaded beyond the weekday.
+ */
+const DAILY: BoardItemSchedule = { repeatsOn: [0, 1, 2, 3, 4, 5, 6] }
+const WEEKDAYS: BoardItemSchedule = { repeatsOn: [1, 2, 3, 4, 5] }
+const WEDNESDAYS: BoardItemSchedule = { repeatsOn: [3] }
+const LAST_MONTH: BoardItemSchedule = { instances: ['2026-10-12'] }
+
+const scheduled = (item: BoardItem, schedule: BoardItemSchedule): BoardItem => ({ ...item, schedule })
+
 /* ---------- Boards ---------- */
 
 const items: BoardItem[] = []
@@ -84,10 +104,14 @@ const add = (...list: BoardItem[]) => {
 function routineItems(prefix: string, cat: CategoryId): string[] {
   const both = [cat, 'social']
   return [
-    ...add(weeklyFs(`${prefix}-weekly-fs`, [cat]), plain(`${prefix}-clean`, 'Clean your room', [cat]), f101(`${prefix}-f101`, [cat])),
+    ...add(
+      weeklyFs(`${prefix}-weekly-fs`, [cat]),
+      scheduled(plain(`${prefix}-clean`, 'Clean your room', [cat]), DAILY),
+      f101(`${prefix}-f101`, [cat]),
+    ),
     ...add(...repeatItems(`${prefix}-more`, 19, [cat])),
-    ...add({ ...plain(`${prefix}-call-plumber`, 'Call Plumber', both), status: 'done' }),
-    ...add(plain(`${prefix}-meet-design`, 'Meet Design Group', both)),
+    ...add(scheduled({ ...plain(`${prefix}-call-plumber`, 'Call Plumber', both), status: 'done' }, LAST_MONTH)),
+    ...add(scheduled(plain(`${prefix}-meet-design`, 'Meet Design Group', both), WEEKDAYS)),
     ...add(...repeatItems(`${prefix}-social`, 132, both)),
   ]
 }
@@ -99,7 +123,11 @@ function routineItems(prefix: string, cat: CategoryId): string[] {
 function unsortedItems(prefix: string, cat: CategoryId, socialStatus: BoardItemStatus): string[] {
   const both = [cat, 'social']
   return [
-    ...add(weeklyFs(`${prefix}-weekly-fs`, [cat]), plain(`${prefix}-clean`, 'Clean your room', [cat]), f101(`${prefix}-f101`, [cat])),
+    ...add(
+      scheduled(weeklyFs(`${prefix}-weekly-fs`, [cat]), DAILY),
+      plain(`${prefix}-clean`, 'Clean your room', [cat]),
+      f101(`${prefix}-f101`, [cat]),
+    ),
     ...add(...repeatItems(`${prefix}-more`, 6, [cat])),
     ...add({ ...plain(`${prefix}-call-plumber`, 'Call Plumber', both), status: 'done' }),
     ...add(plain(`${prefix}-meet-design`, 'Meet Design Group', both, socialStatus)),
@@ -110,8 +138,11 @@ function unsortedItems(prefix: string, cat: CategoryId, socialStatus: BoardItemS
 function wednesdayItems(prefix: string, cat: CategoryId): string[] {
   const both = [cat, 'social']
   return [
-    ...add(f101(`${prefix}-f101`, [cat]), ...repeatItems(`${prefix}-more`, 21, [cat])),
-    ...add(plain(`${prefix}-meet-design`, 'Meet Design Group', both), ...repeatItems(`${prefix}-social`, 21, both)),
+    ...add(scheduled(f101(`${prefix}-f101`, [cat]), WEDNESDAYS), ...repeatItems(`${prefix}-more`, 21, [cat])),
+    ...add(
+      scheduled(plain(`${prefix}-meet-design`, 'Meet Design Group', both), WEEKDAYS),
+      ...repeatItems(`${prefix}-social`, 21, both),
+    ),
   ]
 }
 

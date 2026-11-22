@@ -72,3 +72,8 @@ export function primaryCell(index: number): { column: number; row: number } {
   const cell = index + 1 // cell 0 is the title
   return { column: (cell % 2) + 1, row: Math.floor(cell / 2) + 1 }
 }
+
+/** Item rows in one band of an open folder: 2 per row in the primary area, 1 per row in a lane. No title cell. */
+export function bandRows(primaryCount: number, laneCounts: readonly number[]): number {
+  return Math.max(1, Math.ceil(primaryCount / 2), ...laneCounts)
+}
