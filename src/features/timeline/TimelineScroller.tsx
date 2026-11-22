@@ -4,10 +4,11 @@ import type { Task } from '../../domain/types'
 import { useElementSize, usePrefersReducedMotion } from '../../ui'
 import { clampDay, timelineHeight, TIMELINE, type DayIndex } from './layout'
 import { TimelineSvg } from './TimelineSvg'
-import type { OpenPhaseHandler } from './types'
+import type { OpenPhaseHandler, RequestDeleteHandler } from './types'
 
 export type TimelineScrollerHandle = {
   scrollToDay: (day: DayIndex) => void
+  focus: () => void
 }
 
 type TimelineScrollerProps = {
@@ -15,6 +16,7 @@ type TimelineScrollerProps = {
   rows: Task[][]
   onVisibleDayChange: (day: DayIndex) => void
   onOpenPhase: OpenPhaseHandler
+  onRequestDelete: RequestDeleteHandler
   ref?: Ref<TimelineScrollerHandle>
 }
 
@@ -27,6 +29,7 @@ export function TimelineScroller({
   rows,
   onVisibleDayChange,
   onOpenPhase,
+  onRequestDelete,
   ref,
 }: TimelineScrollerProps) {
   const scrollerRef = useRef<HTMLDivElement | null>(null)
@@ -50,7 +53,7 @@ export function TimelineScroller({
     })
   }
 
-  useImperativeHandle(ref, () => ({ scrollToDay }))
+  useImperativeHandle(ref, () => ({ scrollToDay, focus: () => scrollerRef.current?.focus() }))
 
   // Start on (and stay on, across resizes) the current day without animating.
   useLayoutEffect(() => {
@@ -86,6 +89,8 @@ export function TimelineScroller({
       ref={setScrollerRef}
       tabIndex={0}
       role="region"
+      // Focus lands here when a focused task leaves the timeline (Remove/Delete).
+      data-timeline-scroller
       aria-label="Timeline days. Use the left and right arrow keys to change day."
       onScroll={handleScroll}
       onKeyDown={handleKeyDown}
@@ -102,7 +107,13 @@ export function TimelineScroller({
               style={{ left: i * dayWidth, width: dayWidth }}
             />
           ))}
-          <TimelineSvg window={window} rows={rows} dayWidth={dayWidth} onOpenPhase={onOpenPhase} />
+          <TimelineSvg
+            window={window}
+            rows={rows}
+            dayWidth={dayWidth}
+            onOpenPhase={onOpenPhase}
+            onRequestDelete={onRequestDelete}
+          />
         </div>
       )}
     </div>

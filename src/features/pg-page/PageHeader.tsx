@@ -1,6 +1,7 @@
 import { formatTitleLead } from '../../domain/pageTitle'
 import { usePageMeta } from '../../store/pgPageStore'
 import { TextLink } from '../../ui'
+import { SignOutLink } from '../auth'
 
 /** Two-line page title plus the version line. */
 export function PageHeader({ titleId }: { titleId?: string }) {
@@ -18,6 +19,7 @@ export function PageHeader({ titleId }: { titleId?: string }) {
         <TextLink size="meta" placeholder className="pl-1">
           visit other versions
         </TextLink>
+        <SignOutLink />
       </div>
     </header>
   )

@@ -67,9 +67,9 @@ There is one implementing agent, and it works through the briefs **in order**. E
 | OQ-11 | Does the ad section need a visible "Sponsored" label? | 08 | **Resolved:** visually-hidden only. |
 | OQ-12 | Is the caption serif deliberate, or chosen by each advertiser? | 08 | Open. Fallback serif token. |
 | OQ-13 | Are the teal bands part of the gallery, or a divider shared by every section? | 08 | **Resolved:** gallery only. |
-| OQ-14 | What does **See all** do on a board group? | 09 | Open. Placeholder. |
+| OQ-14 | What does **See all** do on a board group? | 09 | **Resolved:** drill-down navigation, landing-page spec LP-7.4–7.9 (`specs/landing-page-functionality.md` §7). See all opens its group; the board's Open control opens the category. |
 | OQ-15 | Is "(essentially it's priority tasks)" a group note or a designer annotation? | 09 | Open. Optional `note`. |
 | OQ-16 | What makes a board item **inactive**, and can it be toggled? | 09 | Open. Muted, non-toggleable. |
 | OQ-17 | Can an item sit in two overlap lanes at once? | 09 | Open. First matching lane wins. |
-| OQ-18 | Are the boards and their order fixed, or chosen via **Customize**? | 09 | Open. Fixed fixture order. |
+| OQ-18 | Are the boards and their order fixed, or chosen via **Customize**? | 09 | **Resolved:** fixed. Always Productivity, Self-Care, Leisure; users cannot add, remove, or rename them (LP-7.1). |
 | OQ-8 | Exact token values. Current values were eyeballed from a PNG export. Is there a Figma file to inspect? | 01 | Refine when Figma access is available. |

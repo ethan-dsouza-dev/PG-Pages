@@ -86,3 +86,13 @@ describe('resetDay', () => {
     expect(after.goals[2]).toBe(before.goals[2])
   })
 })
+
+describe('day actions and unscheduled tasks', () => {
+  it('leaves tasks taken off the schedule untouched', () => {
+    const before = page()
+    before.tasks[0] = { ...before.tasks[0], unscheduled: true }
+    const after = checkAll(before, TODAY)
+    expect(after.tasks[0]).toBe(before.tasks[0])
+    expect(after.tasks[0].completed).toBe(false)
+  })
+})

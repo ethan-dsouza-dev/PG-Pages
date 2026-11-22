@@ -14,6 +14,10 @@ export type BoardScope = {
   laneNames: Record<CategoryId, string>
   items: Readonly<Record<string, BoardItem>>
   onToggleItem: (itemId: string) => void
+  /** Today's calendar date ('YYYY-MM-DD', page time zone), for LP-7.8 ordering. */
+  today: string
+  /** Opens the group at this path (top-level id first). */
+  onOpen: (path: readonly string[]) => void
 }
 
 type BoardGroupProps = {
@@ -23,18 +27,22 @@ type BoardGroupProps = {
   depth?: number
   /** Grid row this group occupies in its parent. */
   row?: number
+  /** Ids of the enclosing groups, top level first. */
+  parentPath?: readonly string[]
 }
 
 const HEADING_TAGS = ['h3', 'h4', 'h5', 'h6'] as const
 
 /**
- * One group: a ring around a pale panel spanning the whole board, the title in
+ * One group as drawn in the root view (LP-7.4): a ring around a pale panel spanning the whole board, the title in
  * primary cell 1, a 2-column primary area, one column per lane, then nested
  * groups. It is a column `subgrid` of the board, so lanes line up across groups.
  */
-export function BoardGroup({ group, scope, depth = 0, row }: BoardGroupProps) {
+export function BoardGroup({ group, scope, depth = 0, row, parentPath = [] }: BoardGroupProps) {
   const headingId = useId()
-  const { board, boardName, laneNames, items, onToggleItem } = scope
+  const { board, boardName, laneNames, items, onToggleItem, onOpen } = scope
+  const path = [...parentPath, group.id]
+  const openGroup = () => onOpen(path)
   const compact = group.layout === 'compact'
   const placed = placeItems(board, group, items)
   const primary = visibleSlice(placed.primary, compact ? COMPACT_PRIMARY_CAP : undefined)
@@ -95,6 +103,7 @@ export function BoardGroup({ group, scope, depth = 0, row }: BoardGroupProps) {
             <SeeAllButton
               count={primary.total}
               label={`See all ${primary.total} ${boardName} items in ${group.title}`}
+              onClick={openGroup}
               className="relative z-2 col-start-3 row-start-1 self-start"
             />
           )}
@@ -126,6 +135,7 @@ export function BoardGroup({ group, scope, depth = 0, row }: BoardGroupProps) {
               <SeeAllButton
                 count={lane.total}
                 label={`See all ${lane.total} ${name} items in ${group.title}`}
+                onClick={openGroup}
                 className="relative z-2 col-start-2 row-start-1 self-start"
               />
             )}
@@ -134,7 +144,14 @@ export function BoardGroup({ group, scope, depth = 0, row }: BoardGroupProps) {
       })}
 
       {group.children?.map((child, i) => (
-        <BoardGroup key={child.id} group={child} scope={scope} depth={depth + 1} row={itemRows + 1 + i} />
+        <BoardGroup
+          key={child.id}
+          group={child}
+          scope={scope}
+          depth={depth + 1}
+          row={itemRows + 1 + i}
+          parentPath={path}
+        />
       ))}
     </div>
   )

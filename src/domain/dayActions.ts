@@ -34,6 +34,7 @@ export function resetDay(page: PGPage, day: Date): PGPage {
 }
 
 // Check All only covers day goals; month goals are never touched by day actions.
+// Tasks taken off the schedule are skipped too (they are not on the timeline).
 function setDayCompletion(
   page: PGPage,
   day: Date,
@@ -45,7 +46,7 @@ function setDayCompletion(
     scopes.includes(g.scope) && g.completed !== completed ? { ...g, completed } : g,
   )
   const tasks = mapIfChanged(page.tasks, (t: Task) =>
-    overlaps(t, bounds) && t.completed !== completed ? { ...t, completed } : t,
+    !t.unscheduled && overlaps(t, bounds) && t.completed !== completed ? { ...t, completed } : t,
   )
   if (goals === page.goals && tasks === page.tasks) return page
   return { ...page, goals, tasks }
