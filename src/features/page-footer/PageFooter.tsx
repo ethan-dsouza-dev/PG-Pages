@@ -13,7 +13,7 @@ export function PageFooter() {
   return (
     <footer className="bg-surface-footer text-text-on-footer [--color-focus-ring:var(--color-focus-ring-inverse)]">
       <div className="mx-auto flex h-footer max-w-page flex-col items-end justify-between px-16 py-12">
-        {/* PLACEHOLDER(09): Customize (OQ-18: which boards show, and in what order). */}
+        {/* PLACEHOLDER(09): Customize. Boards stay fixed (LP-7.1, OQ-18); what Customize changes is open. */}
         <TextLink placeholder className="font-display">
           Customize
         </TextLink>

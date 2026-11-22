@@ -18,7 +18,7 @@ type PGPageState = {
    * except for slots the user swaps with `changeGalleryAd`.
    */
   galleryAds: Ad[]
-  /** Category boards below the gallery, in page order (OQ-18: fixed order). */
+  /** Category boards below the gallery, in page order (fixed: LP-7.1, OQ-18). */
   boards: Board[]
   boardItems: Record<string, BoardItem>
   categories: Record<CategoryId, Category>

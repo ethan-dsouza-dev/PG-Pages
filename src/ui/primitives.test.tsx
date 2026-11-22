@@ -152,3 +152,15 @@ describe('SeeAllButton', () => {
     info.mockRestore()
   })
 })
+
+describe('SeeAllButton with onClick', () => {
+  it('is a real button, not a placeholder', async () => {
+    const user = userEvent.setup()
+    const onClick = vi.fn()
+    render(<SeeAllButton count={22} label="See all 22 items" onClick={onClick} />)
+    const button = screen.getByRole('button', { name: 'See all 22 items' })
+    expect(button).not.toHaveAttribute('aria-disabled')
+    await user.click(button)
+    expect(onClick).toHaveBeenCalledOnce()
+  })
+})
