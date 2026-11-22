@@ -4,7 +4,7 @@
 **Scope:** What the **landing page** (the main PG Page a signed-in user sees) must *do*. Visual design, tokens, and layout live in the mockups and the agent briefs in [briefs/](briefs/00-README.md); this file is about behavior only.
 
 **In scope:** everything a user can see or trigger from the landing page itself, including the *entry points* to other screens.
-**Out of scope (separate specs):** the full New/Edit Task window and its subphase editor, the Guided Day Planning page and its scripts, the Advertiser interface site, and sign-up/sign-in screens. Where the landing page opens one of these, this spec only defines *how it opens it and what it pre-fills*.
+**Out of scope (separate specs):** the full New/Edit Task window and its subphase editor ([task-window-functionality.md](task-window-functionality.md)), the Guided Day Planning page and its scripts, the Advertiser interface site, and sign-up/sign-in screens. Where the landing page opens one of these, this spec only defines *how it opens it and what it pre-fills*.
 
 Requirement IDs (`LP-x.y`) are for reference in briefs, PRs, and tests.
 
@@ -86,7 +86,7 @@ Task interactions (§6) apply wherever a task appears: on the time representatio
 | **Theme** | Every day | **No**, never |
 
 - **LP-4.3 Checking.** Goals use the same check flow and states as tasks (§6.1). Themes use it too, but have only **Unchecked** and **Done**: nothing can mark a theme Missed.
-- **LP-4.4 Context-aware "+".** Each section has a "+" button that opens the New Task window pre-set for that section (see LP-6.10).
+- **LP-4.4 Context-aware "+".** Each section has a "+" button that opens the New Task window pre-set for that section (see LP-6.11).
 - **LP-4.5 Right-click.** Goals and themes support the same right-click menu as tasks (§6.2), with labels adjusted ("Duplicate goal", "Duplicate theme").
 
 ---
@@ -151,7 +151,7 @@ Right-clicking a task (on the time representation or in a folder) opens a menu w
 | A sub-folder | Task tab, folder = that sub-folder |
 | A board's Social lane | Task tab, folder = that category, Social = checked |
 
-*(The window's own fields, Task/Goal/Theme tabs, subphases, and milestones are specified separately.)*
+*(The window's own fields, Task/Goal/Theme tabs, subphases, and milestones are specified in [task-window-functionality.md](task-window-functionality.md).)*
 
 ---
 
