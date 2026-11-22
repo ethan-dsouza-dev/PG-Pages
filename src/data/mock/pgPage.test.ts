@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { clampToWindow, getTimelineWindow, groupTasksIntoRows } from '../../domain/timeline'
+import {
+  clampToWindow,
+  getTimelineWindow,
+  getUntimedTasksForDay,
+  getVisibleHours,
+  groupTasksIntoRows,
+  isTimed,
+} from '../../domain/timeline'
 import { createMockPage } from './pgPage'
 
 describe('createMockPage', () => {
@@ -12,7 +19,7 @@ describe('createMockPage', () => {
   })
 
   it('lays out the mockup rows in order', () => {
-    const rows = groupTasksIntoRows(page.tasks)
+    const rows = groupTasksIntoRows(page.tasks.filter(isTimed))
     expect(rows.map((r) => r[0].title)).toEqual([
       'Make the bed',
       'F101 Assignment',
@@ -27,6 +34,21 @@ describe('createMockPage', () => {
     const window = getTimelineWindow(now, 'UTC')
     const f101 = clampToWindow(page.tasks.find((t) => t.id === 'f101-assignment')!, window)
     expect(f101?.startsBefore && f101.endsAfter).toBe(true)
+  })
+
+  it('auto-extends the default 08:00–22:00 to 07:00 for Pre-reading', () => {
+    expect(getVisibleHours(getTimelineWindow(now, 'UTC'), page.tasks, false)).toEqual({
+      startHour: 7,
+      endHour: 22,
+    })
+  })
+
+  it('has All Day and untimed tasks today', () => {
+    const today = getTimelineWindow(now, 'UTC').days[1]
+    expect(getUntimedTasksForDay(page.tasks, today, 'UTC').map((t) => t.title)).toEqual([
+      "Grandma's birthday",
+      'Pay rent',
+    ])
   })
 
   it('only references goals that exist', () => {

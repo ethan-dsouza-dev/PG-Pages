@@ -1,6 +1,6 @@
 import { useImperativeHandle, useLayoutEffect, useRef, type KeyboardEvent, type Ref } from 'react'
 import type { TimelineWindow } from '../../domain/timeline'
-import type { Task } from '../../domain/types'
+import type { HourRange, Task } from '../../domain/types'
 import { useElementSize, usePrefersReducedMotion } from '../../ui'
 import { clampDay, timelineHeight, TIMELINE, type DayIndex } from './layout'
 import { TimelineSvg } from './TimelineSvg'
@@ -12,6 +12,7 @@ export type TimelineScrollerHandle = {
 
 type TimelineScrollerProps = {
   window: TimelineWindow
+  hours: HourRange
   rows: Task[][]
   onVisibleDayChange: (day: DayIndex) => void
   onOpenPhase: OpenPhaseHandler
@@ -24,6 +25,7 @@ type TimelineScrollerProps = {
  */
 export function TimelineScroller({
   window,
+  hours,
   rows,
   onVisibleDayChange,
   onOpenPhase,
@@ -102,7 +104,7 @@ export function TimelineScroller({
               style={{ left: i * dayWidth, width: dayWidth }}
             />
           ))}
-          <TimelineSvg window={window} rows={rows} dayWidth={dayWidth} onOpenPhase={onOpenPhase} />
+          <TimelineSvg window={window} hours={hours} rows={rows} dayWidth={dayWidth} onOpenPhase={onOpenPhase} />
         </div>
       )}
     </div>

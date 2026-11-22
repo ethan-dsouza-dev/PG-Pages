@@ -22,11 +22,21 @@ export type Phase = {
 
 // TODO(OQ-7): reconcile with the PROJECT_BRIEF `Event` model (source, recurrence,
 // sync fields) before adding persistence.
+/**
+ * How a task sits in time. Absent means timed: drawn on the timeline from `start` to `end`.
+ * - `all-day`: occupies the whole day(s) (a birthday, a trip).
+ * - `untimed`: belongs to a day but has no time of day yet.
+ * Both are kept off the time sheet (LP-3.11a); `start`/`end` then hold the
+ * midnight-to-midnight span of the day(s) the task belongs to.
+ */
+export type TaskTiming = 'all-day' | 'untimed'
+
 export type Task = {
   id: string
   title: string
   start: string
   end: string
+  timing?: TaskTiming
   /** IANA time zone */
   timeZone: string
   completed: boolean
@@ -51,6 +61,9 @@ export type PGPage = {
 
 /** Anything with an ISO start and end, e.g. a Task or a Phase. */
 export type TimeSpan = Pick<Task, 'start' | 'end'>
+
+/** Hours of the day the timeline shows, in the page's wall-clock time. 0 ≤ startHour < endHour ≤ 24. */
+export type HourRange = { startHour: number; endHour: number }
 
 /** A sponsored placement shown in the ad gallery. */
 export type Ad = {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMockPage } from '../../data/mock/pgPage'
@@ -14,7 +14,7 @@ const maxScroll = dayWidth * 3 - TEST_ELEMENT_WIDTH
 
 describe('TimelinePanel', () => {
   beforeEach(() => {
-    usePGPageStore.setState({ page: createMockPage() })
+    usePGPageStore.setState({ page: createMockPage(), showFullDay: false })
   })
 
   afterEach(() => {
@@ -84,5 +84,61 @@ describe('TimelinePanel', () => {
         'true',
       )
     }
+  })
+
+  it('keeps All Day and untimed tasks off the sheet and lists them in the All Day popover', async () => {
+    const user = userEvent.setup()
+    render(<TimelinePanel />)
+    const sheet = screen.getByRole('group', { name: /Tasks from yesterday to tomorrow/ })
+    expect(within(sheet).queryByRole('button', { name: /birthday|Pay rent/ })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'All Day (2)' }))
+    const popover = screen.getByRole('dialog', { name: /All Day: Today/ })
+    expect(popover).toHaveTextContent("Grandma's birthday")
+    expect(popover).toHaveTextContent('Pay rent, done')
+    expect(popover).not.toHaveTextContent('Return library books')
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'All Day (2)' })).toHaveFocus()
+  })
+
+  it('stretches the day to 24 hours from the Show 24 hours checkbox', async () => {
+    const user = userEvent.setup()
+    render(<TimelinePanel />)
+    const barX = () =>
+      Number(
+        screen
+          .getByRole('button', { name: /^Pre-reading, / })
+          .querySelector('rect')
+          ?.getAttribute('x'),
+      )
+    const defaultX = barX()
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Show 24 hours' })
+    await user.click(checkbox)
+    expect(usePGPageStore.getState().showFullDay).toBe(true)
+    // 07:30 sits further into a 24-hour day than into a 07:00–22:00 one.
+    expect(barX()).toBeGreaterThan(defaultX)
+
+    await user.click(checkbox)
+    expect(barX()).toBe(defaultX)
+  })
+
+  it('hides the now indicator outside the visible hours', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const lateNight = new Date()
+    lateNight.setHours(23, 30, 0, 0)
+    vi.setSystemTime(lateNight)
+    usePGPageStore.setState({ page: createMockPage() })
+
+    const { unmount } = render(<TimelinePanel />)
+    expect(screen.queryByTestId('now-indicator')).not.toBeInTheDocument()
+    unmount()
+
+    usePGPageStore.setState({ showFullDay: true })
+    render(<TimelinePanel />)
+    expect(screen.getByTestId('now-indicator')).toBeInTheDocument()
+    vi.useRealTimers()
   })
 })

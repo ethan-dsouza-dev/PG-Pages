@@ -1,5 +1,5 @@
 import { createTimeScale, type TimelineWindow } from '../../domain/timeline'
-import type { Task } from '../../domain/types'
+import type { HourRange, Task } from '../../domain/types'
 import { rowTop, timelineHeight, TIMELINE } from './layout'
 import { NowIndicator } from './NowIndicator'
 import { TaskRow } from './TaskRow'
@@ -7,16 +7,18 @@ import type { OpenPhaseHandler } from './types'
 
 type TimelineSvgProps = {
   window: TimelineWindow
+  /** Visible hours of each day (LP-3.5–3.7). */
+  hours: HourRange
   rows: Task[][]
   dayWidth: number
   onOpenPhase: OpenPhaseHandler
 }
 
-/** Pure render of the 3-day timeline: (window, rows, size) → SVG. */
-export function TimelineSvg({ window, rows, dayWidth, onOpenPhase }: TimelineSvgProps) {
+/** Pure render of the 3-day timeline: (window, hours, rows, size) → SVG. */
+export function TimelineSvg({ window, hours, rows, dayWidth, onOpenPhase }: TimelineSvgProps) {
   const width = dayWidth * 3
   const height = timelineHeight(rows.length)
-  const scale = createTimeScale(window, dayWidth)
+  const scale = createTimeScale(window, hours, dayWidth)
 
   return (
     <svg
@@ -48,7 +50,7 @@ export function TimelineSvg({ window, rows, dayWidth, onOpenPhase }: TimelineSvg
           onOpenPhase={onOpenPhase}
         />
       ))}
-      <NowIndicator scale={scale} window={window} height={height} />
+      <NowIndicator scale={scale} window={window} hours={hours} height={height} />
     </svg>
   )
 }

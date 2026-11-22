@@ -5,7 +5,9 @@ import type { Goal, PGPage, Phase, Task } from '../../domain/types'
 /*
  * Mock PG Page that reproduces specs/mockups/pg-page-desktop-v1.png.
  * Times are relative to `now` so the now indicator always lands mid-timeline.
- * Durations mirror the mockup's bar widths rather than realistic task lengths.
+ * Durations mirror the mockup's bar widths rather than realistic task lengths,
+ * scaled into the default 08:00–22:00 day (LP-3.5). Pre-reading starts at 07:30
+ * so the timeline shows auto-extend (LP-3.6) out of the box.
  */
 
 const goals: Goal[] = [
@@ -39,8 +41,8 @@ export function createMockPage(
       (offset): Task => ({
         id: `make-bed-${offset + 1}`,
         title: 'Make the bed',
-        start: at(offset, 0.5),
-        end: at(offset, 23.5),
+        start: at(offset, 8.25),
+        end: at(offset, 21.75),
         timeZone,
         completed: offset <= 0,
         goalId: 'day-clean-room',
@@ -72,27 +74,58 @@ export function createMockPage(
       id: 'f101-assignment-2',
       title: 'F101 Assignment',
       start: at(-2, 9),
-      end: at(0, 23.75),
+      end: at(0, 21.75),
       timeZone,
       completed: false,
       goalId: 'month-f101',
       phases: [
-        phase('f101b-research', 'Research', at(-2, 9), at(-1, 4), [
-          phase('f101b-sources', 'Find sources', at(-2, 9), at(-1, 0)),
-          phase('f101b-notes', 'Take notes', at(-1, 0), at(-1, 4)),
+        phase('f101b-research', 'Research', at(-2, 9), at(-1, 10.5), [
+          phase('f101b-sources', 'Find sources', at(-2, 9), at(-1, 8)),
+          phase('f101b-notes', 'Take notes', at(-1, 8), at(-1, 10.5)),
         ]),
-        phase('f101b-draft', 'Draft', at(-1, 4), at(0, 18)),
-        phase('f101b-review', 'Review', at(0, 18), at(0, 23.75)),
+        phase('f101b-draft', 'Draft', at(-1, 10.5), at(0, 18.5)),
+        phase('f101b-review', 'Review', at(0, 18.5), at(0, 21.75)),
       ],
     },
     {
       id: 'pre-reading',
       title: 'Pre-reading',
-      start: at(0, 0.5),
-      end: at(0, 14),
+      start: at(0, 7.5),
+      end: at(0, 16),
       timeZone,
       completed: true,
       goalId: 'day-read',
+    },
+    // LP-3.11a: kept off the time sheet; listed behind the All Day button.
+    {
+      id: 'grandma-birthday',
+      title: "Grandma's birthday",
+      timing: 'all-day',
+      start: at(0, 0),
+      end: at(1, 0),
+      timeZone,
+      completed: false,
+      goalId: 'day-call',
+    },
+    {
+      id: 'pay-rent',
+      title: 'Pay rent',
+      timing: 'untimed',
+      start: at(0, 0),
+      end: at(1, 0),
+      timeZone,
+      completed: true,
+      goalId: 'month-save',
+    },
+    {
+      id: 'library-books',
+      title: 'Return library books',
+      timing: 'untimed',
+      start: at(1, 0),
+      end: at(2, 0),
+      timeZone,
+      completed: false,
+      goalId: 'month-books',
     },
   ]
 

@@ -18,7 +18,7 @@ export function WeekNav() {
   )
 }
 
-const DAY_NAMES = ['Yesterday', 'Today', 'Tomorrow'] as const
+export const DAY_NAMES = ['Yesterday', 'Today', 'Tomorrow'] as const
 
 type DayNavProps = {
   visibleDay: DayIndex

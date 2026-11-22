@@ -1,12 +1,19 @@
-import { useRef, useState } from 'react'
-import { getTimelineWindow, groupTasksIntoRows } from '../../domain/timeline'
+import { useId, useRef, useState } from 'react'
+import {
+  getTimelineWindow,
+  getUntimedTasksForDay,
+  getVisibleHours,
+  groupTasksIntoRows,
+  isTimed,
+} from '../../domain/timeline'
 import { formatDayLabel } from '../../domain/timelineFormat'
-import { usePageMeta, useTasks } from '../../store/pgPageStore'
+import { usePageMeta, useShowFullDay, useTasks } from '../../store/pgPageStore'
 import { AddChip, Panel } from '../../ui'
+import { AllDayPopover } from './AllDayPopover'
 import type { DayIndex } from './layout'
 import { CurrentTimeText } from './NowIndicator'
 import { PhaseDetail, type OpenPhase } from './PhaseDetail'
-import { DayNav, WeekNav } from './TimelineNav'
+import { DAY_NAMES, DayNav, WeekNav } from './TimelineNav'
 import { TimelineScroller, type TimelineScrollerHandle } from './TimelineScroller'
 import type { OpenPhaseHandler } from './types'
 
@@ -18,7 +25,11 @@ export function TimelinePanel() {
   // TODO: roll the window over at midnight once real data is wired in.
   const [anchor] = useState(() => new Date())
   const window = getTimelineWindow(anchor, timeZone)
-  const rows = groupTasksIntoRows(tasks)
+  const [showFullDay, setShowFullDay] = useShowFullDay()
+  const hours = getVisibleHours(window, tasks, showFullDay)
+  // LP-3.11a: All Day and untimed tasks live behind the All Day button, not on the sheet.
+  const rows = groupTasksIntoRows(tasks.filter(isTimed))
+  const fullDayId = useId()
 
   const [visibleDay, setVisibleDay] = useState<DayIndex>(1)
   const [openPhase, setOpenPhase] = useState<OpenPhase | null>(null)
@@ -32,9 +43,28 @@ export function TimelinePanel() {
 
   return (
     <section aria-labelledby="timeline-date" className="flex flex-col gap-2">
-      <h2 id="timeline-date" className="text-center text-label font-medium">
-        {formatDayLabel(window.days[visibleDay], timeZone)}
-      </h2>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div>
+          <AllDayPopover
+            tasks={getUntimedTasksForDay(tasks, window.days[visibleDay], timeZone)}
+            dayName={DAY_NAMES[visibleDay]}
+            dayLabel={formatDayLabel(window.days[visibleDay], timeZone)}
+          />
+        </div>
+        <h2 id="timeline-date" className="text-center text-label font-medium">
+          {formatDayLabel(window.days[visibleDay], timeZone)}
+        </h2>
+        <div className="flex items-center justify-end gap-2 text-label whitespace-nowrap">
+          <input
+            id={fullDayId}
+            type="checkbox"
+            checked={showFullDay}
+            onChange={(e) => setShowFullDay(e.target.checked)}
+            className="interactive size-5 accent-text"
+          />
+          <label htmlFor={fullDayId}>Show 24 hours</label>
+        </div>
+      </div>
       <Panel className="flex flex-col gap-3 px-12 pt-4 pb-6">
         <WeekNav />
         <DayNav visibleDay={visibleDay} onNavigate={(day) => scrollerRef.current?.scrollToDay(day)} />
@@ -42,6 +72,7 @@ export function TimelinePanel() {
         <TimelineScroller
           ref={scrollerRef}
           window={window}
+          hours={hours}
           rows={rows}
           onVisibleDayChange={setVisibleDay}
           onOpenPhase={handleOpenPhase}
