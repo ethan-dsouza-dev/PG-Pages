@@ -12,7 +12,7 @@ type PGPageState = {
   page: PGPage
   /** Picked once when the store is created: stable for the whole page load. */
   galleryAds: Ad[]
-  /** Category boards below the gallery, in page order (OQ-18: fixed order). */
+  /** Category boards below the gallery, in page order (fixed: LP-7.1, OQ-18). */
   boards: Board[]
   boardItems: Record<string, BoardItem>
   categories: Record<CategoryId, Category>

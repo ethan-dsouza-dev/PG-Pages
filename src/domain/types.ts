@@ -91,6 +91,23 @@ export type BoardItem = {
   /** Optional phase strip. `span` is required when phases are present. */
   span?: TimeSpan
   phases?: Phase[]
+  /** When the item lands on the day schedule. Absent means unscheduled (LP-7.9). */
+  schedule?: BoardItemSchedule
+}
+
+/** 0 = Sunday … 6 = Saturday, as `Date#getDay`. */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+/**
+ * Where a board item shows up in the day schedule (LP-7.8). Dates are calendar
+ * days ('YYYY-MM-DD') in the page's time zone. TODO(OQ-7): fold into the
+ * recurrence model once Task and Event are reconciled.
+ */
+export type BoardItemSchedule = {
+  /** One-off instances, one calendar day each. */
+  instances?: string[]
+  /** Repeats on these weekdays. */
+  repeatsOn?: Weekday[]
 }
 
 export type BoardGroupLayout = 'compact' | 'expanded'

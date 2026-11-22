@@ -6,8 +6,20 @@ import { MOCK_BOARD_ITEMS, MOCK_BOARDS, MOCK_CATEGORIES } from '../../data/mock/
 import { toggleBoardItem } from '../../domain/boards'
 import type { Board as BoardData, BoardItem } from '../../domain/types'
 import { Board } from './Board'
+import type { FolderPath } from './folderPath'
 
-function Harness({ board, items = MOCK_BOARD_ITEMS }: { board: BoardData; items?: Record<string, BoardItem> }) {
+/** A Wednesday: F101 (Wednesdays), Meet Design Group (weekdays), and the daily items are on today's schedule. */
+const TODAY = '2026-11-18'
+
+function Harness({
+  board,
+  items = MOCK_BOARD_ITEMS,
+  initialPath,
+}: {
+  board: BoardData
+  items?: Record<string, BoardItem>
+  initialPath?: FolderPath
+}) {
   const [state, setState] = useState(items)
   return (
     <section aria-labelledby="board-title">
@@ -17,6 +29,8 @@ function Harness({ board, items = MOCK_BOARD_ITEMS }: { board: BoardData; items?
         items={state}
         onToggleItem={(id) => setState((s) => toggleBoardItem(s, id))}
         headingId="board-title"
+        today={TODAY}
+        initialPath={initialPath}
       />
     </section>
   )
@@ -125,11 +139,12 @@ describe('Board', () => {
     const board = boardById('board-productivity')
     render(<Harness board={board} />)
     const names: string[] = []
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 16; i++) {
       await user.tab()
       names.push(document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.textContent ?? '')
     }
-    expect(names.slice(0, 7)).toEqual([
+    expect(names.slice(0, 8)).toEqual([
+      'Open Productivity',
       'Weekly FS Project, 4 phases',
       'Clean your room',
       'F101 Assignment, 4 phases',
